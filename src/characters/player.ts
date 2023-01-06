@@ -1,14 +1,8 @@
 import Phaser from 'phaser';
+import PlayerError from '../errors/player';
 import { SpriteContainer } from '../types/spriteContainer';
 
 const GUY_NAME = 'dumbguy';
-
-export class PlayerError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'PlayerError';
-  }
-}
 
 export default class Player implements SpriteContainer {
   public scene: Phaser.Scene;
@@ -24,7 +18,7 @@ export default class Player implements SpriteContainer {
   public frameRate: number;
 
   public frameHeight: number = 24;
-  
+
   public frameWidth: number = 24;
 
   public speed: number = 100;
@@ -38,13 +32,13 @@ export default class Player implements SpriteContainer {
   private runningFrameStart: number = 18;
 
   private runningFrameSize: number = 13;
-  
+
   private runLeftName: string;
 
   private runRightName: string;
-  
+
   private turnLeftName: string;
-  
+
   private turnRightName: string;
 
   private ascendingLeftName: string;
@@ -251,12 +245,15 @@ export default class Player implements SpriteContainer {
   private ascendingRight() {
     this.sprite!.anims.play(this.ascendingRightName, true);
   }
+
   private ascendingLeft() {
     this.sprite!.anims.play(this.ascendingLeftName, true);
   }
+
   private descendingRight() {
     this.sprite!.anims.play(this.descendingRightName, true);
   }
+
   private descendingLeft() {
     this.sprite!.anims.play(this.descendingLeftName, true);
   }

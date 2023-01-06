@@ -12,7 +12,7 @@ export default class Menu extends Phaser.Scene {
   private frameRate: number = 20;
 
   private player: Player;
-  
+
   private ground?: Phaser.Types.Physics.Arcade.SpriteWithStaticBody;
 
   private start: MenuItem;
@@ -42,7 +42,7 @@ export default class Menu extends Phaser.Scene {
       'quit',
       48,
       176,
-      () => this.gameOver = true,
+      () => { this.gameOver = true; },
     );
   }
 
@@ -88,12 +88,14 @@ export default class Menu extends Phaser.Scene {
     this.physics.add.collider(
       this.player.sprite!,
       this.start.sprite!,
-      (o1, o2) => this.start.onCollide(),
+      // eslint-disable-next-line no-unused-vars
+      (_o1, _o2) => this.start.onCollide(),
     );
     this.physics.add.collider(
       this.player.sprite!,
       this.quit.sprite!,
-      (o1, o2) => this.quit.onCollide(),
+      // eslint-disable-next-line no-unused-vars
+      (_o1, _o2) => this.quit.onCollide(),
     );
   }
 
@@ -131,4 +133,3 @@ export default class Menu extends Phaser.Scene {
     }
   }
 }
-

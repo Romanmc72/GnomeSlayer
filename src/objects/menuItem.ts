@@ -1,12 +1,6 @@
 import Phaser from 'phaser';
+import MenuItemError from '../errors/menuItem';
 import { SpriteContainer } from '../types/spriteContainer';
-
-export class MenuItemError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'MenuItemError';
-  }
-}
 
 export default class MenuItem implements SpriteContainer {
   public scene: Phaser.Scene;
@@ -20,7 +14,7 @@ export default class MenuItem implements SpriteContainer {
   public spriteSheet: string;
 
   public frameHeight: number;
-  
+
   public frameWidth: number;
 
   public sprite?: Phaser.Types.Physics.Arcade.SpriteWithStaticBody;
