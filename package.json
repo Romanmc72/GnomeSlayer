@@ -1,7 +1,7 @@
 {
-  "name": "phaser3-rollup-typescript",
-  "version": "1.1.0",
-  "description": "Phaser 3 TypeScript Starter",
+  "name": "gnome-slayer",
+  "version": "0.0.1",
+  "description": "A Phaser JS game where you kill gnomes",
   "main": "dist/index.js",
   "scripts": {
     "dev": "vite",
@@ -12,14 +12,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/geocine/phaser3-rollup-typescript.git"
+    "url": "git+https://github.com/Romanmc72/GnomeSlayer.git"
   },
-  "author": "Aivan Monceller",
-  "license": "MIT",
+  "author": "Roman Czerwinski",
   "bugs": {
-    "url": "https://github.com/geocine/phaser3-rollup-typescript/issues"
+    "url": "https://github.com/Romanmc72/GnomeSlayer/issues"
   },
-  "homepage": "https://github.com/geocine/phaser3-rollup-typescript#readme",
+  "homepage": "https://github.com/Romanmc72/GnomeSlayer",
   "dependencies": {
     "phaser": "^3.55.2"
   },
