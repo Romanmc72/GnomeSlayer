@@ -2,14 +2,16 @@ import Phaser from 'phaser';
 import Player from '../characters/player';
 import MenuItem from '../objects/menuItem';
 import { LEVEL_1_NAME } from './Level1';
+import PlayerError from '../errors/player';
+import MenuItemError from '../errors/menuItem';
 
 const TITLE_NAME = 'title';
 const GUY_SIZE = 24;
 
 export default class Menu extends Phaser.Scene {
-  private gameOver: boolean = false;
+  private gameOver = false;
 
-  private frameRate: number = 20;
+  private frameRate = 20;
 
   private player: Player;
 
@@ -23,7 +25,7 @@ export default class Menu extends Phaser.Scene {
 
   constructor() {
     super('Menu');
-    this.player = new Player(this);
+    this.player = new Player({ scene: this, x: 0, y: 0 });
     this.start = new MenuItem(
       this,
       112,
@@ -42,7 +44,10 @@ export default class Menu extends Phaser.Scene {
       'quit',
       48,
       176,
-      () => { this.gameOver = true; },
+      () => {
+        this.player.die();
+        this.gameOver = true;
+      },
     );
   }
 
@@ -65,6 +70,7 @@ export default class Menu extends Phaser.Scene {
    */
   create() {
     this.player.create();
+    this.player.HeadsUpDisplay.isVisible = false;
     this.start.create();
     this.quit.create();
     // Need a static sprite to animate it instead of a static group
@@ -84,17 +90,24 @@ export default class Menu extends Phaser.Scene {
       yoyo: true,
     });
 
-    this.physics.add.collider(this.player.sprite!, this.ground);
+    if (!(this.player.sprite)) {
+      throw new PlayerError('Player not initialized!');
+    }
+    if (!(this.start.sprite) || !(this.quit.sprite)) {
+      throw new MenuItemError('Player not initialized!');
+    }
+
+    this.physics.add.collider(this.player.sprite, this.ground);
     this.physics.add.collider(
-      this.player.sprite!,
-      this.start.sprite!,
-      // eslint-disable-next-line no-unused-vars
+      this.player.sprite,
+      this.start.sprite,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       (_o1, _o2) => this.start.onCollide(),
     );
     this.physics.add.collider(
-      this.player.sprite!,
-      this.quit.sprite!,
-      // eslint-disable-next-line no-unused-vars
+      this.player.sprite,
+      this.quit.sprite,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       (_o1, _o2) => this.quit.onCollide(),
     );
   }
@@ -103,33 +116,36 @@ export default class Menu extends Phaser.Scene {
    * The main event loop for the game
    */
   update(): void {
-    const ground = this.ground!;
+    if (!(this.ground)) {
+      throw new Error('Need to define the ground!');
+    }
 
     if (this.gameOver) {
-      return;
+      this.player.die();
     }
 
     this.player.update();
     this.start.update();
     this.quit.update();
-    ground.anims.play(TITLE_NAME, true);
+    this.ground.anims.play(TITLE_NAME, true);
 
-    if (this.player.sprite!.body.touching.none) {
+    if (this.player.sprite?.body.touching.none) {
       this.start.isSelected = false;
       this.quit.isSelected = false;
     }
 
-    if (this.player.cursor!.space.isDown && this.quit.isSelected) {
+    if (this.player.cursor?.space.isDown && this.quit.isSelected) {
       this.quit.select();
     }
 
-    if (this.player.cursor!.space.isDown && this.start.isSelected) {
+    if (this.player.cursor?.space.isDown && this.start.isSelected) {
       this.start.select();
     }
 
-    const feetPosition = this.player.sprite!.body.position.y + this.player.sprite!.height;
+    const feetPosition = (this.player.sprite?.body.position.y ?? 0)
+      + (this.player.sprite?.height ?? 0);
     if (feetPosition === this.physics.world.bounds.bottom) {
-      this.player.sprite!.setY(0);
+      this.player.sprite?.setY(0);
     }
   }
 }
