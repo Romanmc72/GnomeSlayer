@@ -15,6 +15,8 @@ export default class Level1 extends Phaser.Scene {
 
   private gnomeCount = 1;
 
+  private controlsName = 'controls';
+
   constructor() {
     super(LEVEL_1_NAME);
     this.player = new Player({ scene: this, x: 0, y: 0 });
@@ -28,12 +30,14 @@ export default class Level1 extends Phaser.Scene {
     this.player.preload();
     this.gnomes.forEach((gnome) => gnome.preload());
     this.load.image(this.groundName, 'assets/dirt.png');
+    this.load.image(this.controlsName, `assets/${this.controlsName}.png`);
   }
 
   create() {
+    this.physics.add.staticImage(400, 150, this.controlsName);
+    const ground = this.physics.add.staticGroup();
     this.player.create();
     this.gnomes.forEach((gnome) => gnome.create());
-    const ground = this.physics.add.staticGroup();
     ground.create(400, 475, this.groundName);
 
     if (!(this.player.sprite) || !(this.player.equippedWeapon.sprite)) {
