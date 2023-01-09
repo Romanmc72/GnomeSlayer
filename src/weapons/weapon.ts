@@ -2,6 +2,17 @@ import { SpriteContainer } from '../types';
 import Projectile from './projectile';
 import Player from '../characters/player';
 import Enemy from '../characters/enemy';
+import config from '../config';
+
+/**
+ * The dimensions and position of the weapon's icon (standardized)
+ */
+export const WEAPON_ICON_DIMENSIONS = {
+  height: 52,
+  width: 48,
+  x: config.scale.width - 72,
+  y: 48,
+};
 
 /**
  * Represents a weapon whose ammo is infinite
@@ -18,7 +29,7 @@ interface Weapon extends SpriteContainer {
   player: Player;
   /**
    * The function that fires the weapon when called. Should perform both melee
-   * and projectile if weapon does both.
+   * and projectile if weapon does both
    * @returns - Nothing
    */
   fire: () => void;
@@ -39,7 +50,7 @@ interface Weapon extends SpriteContainer {
    */
   canFire: boolean;
   /**
-   * The rate at which the weapon can be fired again, measured in rounds per second.
+   * The rate at which the weapon can be fired again, measured in rounds per second
    */
   rateOfFire: number;
   /**
@@ -66,6 +77,12 @@ interface Weapon extends SpriteContainer {
    * The icon for the weapon.
    */
   icon?: Phaser.Physics.Arcade.Image;
+  /**
+   * Toggle whether or not the icon is displayed
+   * @param display - True will display the icon, False will hide it
+   * @returns - Nothing
+   */
+  displayIcon: (display: boolean) => void;
 }
 
 export default Weapon;

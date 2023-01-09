@@ -6,9 +6,13 @@ import Player from './player';
 export default class SmolGnome implements Enemy {
   public scene: Phaser.Scene;
 
-  public health = 10;
+  public health = 30;
 
   public name = 'SmolGnome';
+
+  public jump = 100;
+
+  private jumpProbability = 0.30;
 
   private spriteName = 'smolGnome';
 
@@ -54,7 +58,7 @@ export default class SmolGnome implements Enemy {
 
   private isDoingSomething = false;
 
-  private hitRecoveryPeriodMs = 1000;
+  private hitRecoveryPeriodMs = 250;
 
   public id: number;
 
@@ -74,6 +78,9 @@ export default class SmolGnome implements Enemy {
 
   private resetDamage() {
     this.takingDamage = false;
+  }
+
+  private resetDoingSomething() {
     this.isDoingSomething = false;
   }
 
@@ -94,13 +101,26 @@ export default class SmolGnome implements Enemy {
 
   public takeDamage(damage: number): void {
     if (!this.takingDamage) {
-      this.takingDamage = true;
-      this.isDoingSomething = true;
       this.health -= damage;
-      setTimeout(this.resetDamage, this.hitRecoveryPeriodMs);
+      this.takingDamage = true;
+      this.isDoingSomething = false;
+      setTimeout(() => this.resetDamage(), this.hitRecoveryPeriodMs);
       if (this.health <= 0) {
         this.die();
       }
+    }
+  }
+
+  private damageAnimation() {
+    this.isDoingSomething = true;
+    setTimeout(() => this.resetDoingSomething(), this.hitRecoveryPeriodMs);
+    this.sprite?.setVelocityY(-150);
+    if (this.sprite!.body.touching.left) {
+      this.sprite?.setVelocityX(150);
+      this.sprite!.anims.play(this.hurtRightName, true);
+    } else {
+      this.sprite?.setVelocityX(-150);
+      this.sprite!.anims.play(this.hurtLeftName, true);
     }
   }
 
@@ -221,19 +241,27 @@ export default class SmolGnome implements Enemy {
   public update(): void {
     if (this.isAlive) {
       if (!this.isDoingSomething) {
-        const seed = Math.random();
-        const randomDuration = Math.floor(Math.random() * 1000);
-        this.isDoingSomething = true;
-        if (seed < 0.25) {
-          this.turnLeft();
-        } else if (seed < 0.50) {
-          this.turnRight();
-        } else if (seed < 0.75) {
-          this.runLeft();
+        if (!this.takingDamage) {
+          const seed = Math.random();
+          const jumpSeed = Math.random();
+          const randomDuration = Math.floor(Math.random() * 1000);
+          this.isDoingSomething = true;
+          if (seed < 0.25) {
+            this.turnLeft();
+          } else if (seed < 0.50) {
+            this.turnRight();
+          } else if (seed < 0.75) {
+            this.runLeft();
+          } else {
+            this.runRight();
+          }
+          if (jumpSeed <= this.jumpProbability && this.sprite?.body.touching.down) {
+            this.sprite?.setVelocityY(-this.jump);
+          }
+          setTimeout(() => this.resetDoingSomething(), randomDuration);
         } else {
-          this.runRight();
+          this.damageAnimation();
         }
-        setTimeout(() => { this.isDoingSomething = false; }, randomDuration);
       }
     } else {
       this.andStayDead();

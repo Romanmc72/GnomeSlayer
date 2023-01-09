@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import Weapon, { INFINITE } from './weapon';
+import Weapon, { INFINITE, WEAPON_ICON_DIMENSIONS } from './weapon';
 import Player from '../characters/player';
 import Enemy from '../characters/enemy';
 import PlayerError from '../errors/player';
@@ -51,6 +51,8 @@ export default class Fist implements Weapon {
 
   public icon?: Phaser.Physics.Arcade.Image;
 
+  private iconName = `${this.spriteName}Icon`;
+
   constructor(scene: Phaser.Scene, player: Player) {
     this.scene = scene;
     this.player = player;
@@ -62,11 +64,13 @@ export default class Fist implements Weapon {
       `assets/${this.spriteSheet}`,
       { frameWidth: this.frameWidth, frameHeight: this.frameHeight },
     );
-    const iconName = `${this.spriteName}Icon`;
     this.scene.load.spritesheet(
-      iconName,
-      `assets/${iconName}.png`,
-      { frameWidth: 48, frameHeight: 53 },
+      this.iconName,
+      `assets/${this.iconName}.png`,
+      {
+        frameWidth: WEAPON_ICON_DIMENSIONS.width,
+        frameHeight: WEAPON_ICON_DIMENSIONS.height,
+      },
     );
   }
 
@@ -99,6 +103,16 @@ export default class Fist implements Weapon {
       frameRate: this.frameRate,
       repeat: 0,
     });
+    this.icon = this.scene.physics.add.staticImage(
+      WEAPON_ICON_DIMENSIONS.x,
+      WEAPON_ICON_DIMENSIONS.y,
+      this.iconName,
+    );
+    this.displayIcon(false);
+  }
+
+  public displayIcon(display: boolean): void {
+    this.icon!.setVisible(display);
   }
 
   public update(): void {

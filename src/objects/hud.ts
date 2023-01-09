@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
-import Weapon from '../weapons/weapon';
 import { SpriteContainer } from '../types';
+import { WEAPON_ICON_DIMENSIONS } from '../weapons/weapon';
 
 export default class HUD implements SpriteContainer {
   public scene: Phaser.Scene;
@@ -26,6 +26,14 @@ export default class HUD implements SpriteContainer {
 
   public isVisible = true;
 
+  private prefix = 'hud-';
+
+  private equippedLabel = `${this.prefix}equipped`;
+
+  private healthLabel = `${this.prefix}health`;
+
+  public texts: Phaser.Physics.Arcade.Image[] = [];
+
   constructor(scene: Phaser.Scene, player: Player) {
     this.scene = scene;
     this.player = player;
@@ -41,6 +49,16 @@ export default class HUD implements SpriteContainer {
       this.healthBarGreen,
       `assets/${this.healthBarGreen}.png`,
       { frameWidth: this.healthSliverWidth, frameHeight: 10 },
+    );
+    this.scene.load.spritesheet(
+      this.equippedLabel,
+      `assets/${this.equippedLabel}.png`,
+      { frameWidth: 63, frameHeight: 8 },
+    );
+    this.scene.load.spritesheet(
+      this.healthLabel,
+      `assets/${this.healthLabel}.png`,
+      { frameWidth: 47, frameHeight: 8 },
     );
   }
 
@@ -59,6 +77,20 @@ export default class HUD implements SpriteContainer {
         ),
       );
     }
+    this.texts.push(
+      this.scene.physics.add.staticImage(
+        WEAPON_ICON_DIMENSIONS.x,
+        WEAPON_ICON_DIMENSIONS.y - 36,
+        this.equippedLabel,
+      ),
+    );
+    this.texts.push(
+      this.scene.physics.add.staticImage(
+        this.x + 24,
+        this.y - 16,
+        this.healthLabel,
+      ),
+    );
   }
 
   public update(): void {
@@ -70,9 +102,13 @@ export default class HUD implements SpriteContainer {
       this.health.slice(this.player.health, playerMaxHealth).forEach(
         (sliver) => sliver.setVisible(false),
       );
+      this.player.weapons.forEach((weapon) => weapon.displayIcon(false));
+      this.player.equippedWeapon.displayIcon(true);
     } else {
       this.background?.setVisible(false);
       this.health.forEach((sliver) => sliver.setVisible(false));
+      this.texts.forEach((text) => text.setVisible(false));
+      this.player.equippedWeapon.displayIcon(false);
     }
   }
 }

@@ -7,6 +7,7 @@ interface Enemy extends SpriteContainer {
   name: string;
   attackDamage: number;
   weapon?: Weapon;
+  jump: number;
   attack: (player: Player) => void;
   // block: () => void;
   takeDamage: (damage: number) => void;

@@ -19,7 +19,7 @@ export default class MenuItem implements SpriteContainer {
 
   public sprite?: Phaser.Types.Physics.Arcade.SpriteWithStaticBody;
 
-  public isSelected: boolean = false;
+  public isSelected = false;
 
   private selectedName: string;
 
