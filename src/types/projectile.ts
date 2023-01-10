@@ -1,3 +1,5 @@
+import Player from '../characters/player';
+import { Enemy } from './enemy';
 import { SpriteContainer } from './spriteContainer';
 
 /**
@@ -45,7 +47,7 @@ export interface Projectile extends SpriteContainer {
    * @param object - The object the projectile has hit
    * @returns - Nothing.
    */
-  hit: (object: Phaser.Physics.Arcade.Sprite) => void;
+  hit: (object: Player | Enemy) => void;
   /**
    * The function to call when the projectile stops
    * @returns - Nothing.
