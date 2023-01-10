@@ -1,9 +1,9 @@
-import { SpriteContainer } from '../types';
+import { SpriteContainer } from './spriteContainer';
 
 /**
  * The interface defining properties for a projectile or bullet.
  */
-interface Projectile extends SpriteContainer {
+export interface Projectile extends SpriteContainer {
   /**
    * How fast the projectile moves.
    */
@@ -52,5 +52,3 @@ interface Projectile extends SpriteContainer {
    */
   stop: () => void;
 }
-
-export default Projectile;

@@ -1,28 +1,17 @@
-import { SpriteContainer } from '../types';
-import Projectile from './projectile';
+import { SpriteContainer } from './spriteContainer';
+import { Projectile } from './projectile';
 import Player from '../characters/player';
-import Enemy from '../characters/enemy';
-import config from '../config';
+import { Enemy } from './enemy';
 
 /**
- * The dimensions and position of the weapon's icon (standardized)
+ * Represents a weapon whose ammo is  either finite or infinite
  */
-export const WEAPON_ICON_DIMENSIONS = {
-  height: 52,
-  width: 48,
-  x: config.scale.width - 72,
-  y: 48,
-};
-
-/**
- * Represents a weapon whose ammo is infinite
- */
-export type INFINITE = 'Inf';
+export type Infinity = 'Inf';
 
 /**
  * The default interface for a given type of weapon
  */
-interface Weapon extends SpriteContainer {
+export interface Weapon extends SpriteContainer {
   /**
    * The player to which this weapon belongs
    */
@@ -40,7 +29,7 @@ interface Weapon extends SpriteContainer {
   /**
    * The ammunition for the weapon
    */
-  ammo: number | INFINITE;
+  ammo: number | Infinity;
   /**
    * How much melee damage this weapon does
    */
@@ -84,5 +73,3 @@ interface Weapon extends SpriteContainer {
    */
   displayIcon: (display: boolean) => void;
 }
-
-export default Weapon;

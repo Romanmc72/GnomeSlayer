@@ -1,8 +1,8 @@
-import { SpriteContainer } from '../types';
-import Weapon from '../weapons/weapon';
-import Player from './player';
+import { SpriteContainer } from './spriteContainer';
+import { Weapon } from './weapon';
+import Player from '../characters/player';
 
-interface Enemy extends SpriteContainer {
+export interface Enemy extends SpriteContainer {
   health: number;
   name: string;
   attackDamage: number;
@@ -14,5 +14,3 @@ interface Enemy extends SpriteContainer {
   isImmune: (weapon: Weapon) => boolean;
   die: () => void;
 }
-
-export default Enemy;

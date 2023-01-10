@@ -1,11 +1,14 @@
 import Phaser from 'phaser';
-import Weapon, { INFINITE, WEAPON_ICON_DIMENSIONS } from './weapon';
+import {
+  Enemy,
+  Weapon,
+} from '../types';
 import Player from '../characters/player';
-import Enemy from '../characters/enemy';
 import PlayerError from '../errors/player';
+import { INFINITY, WEAPON_ICON_DIMENSIONS } from '../constants';
 
 export default class Fist implements Weapon {
-  public ammo: INFINITE = 'Inf';
+  public ammo = INFINITY;
 
   public sprite?: Phaser.Physics.Arcade.Sprite;
 
