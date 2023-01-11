@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import PlayerError from '../errors/player';
-import { SpriteContainer } from '../types/spriteContainer';
-import Weapon from '../weapons/weapon';
+import { SpriteContainer, Weapon } from '../types';
 import Fist from '../weapons/fist';
 import HUD from '../objects/hud';
 
@@ -20,6 +19,22 @@ export interface PlayerProps {
   weapons?: Weapon[];
   equippedWeapon?: Weapon;
   health?: number;
+}
+
+type KeyboardKey = {
+  isDown: boolean;
+}
+
+type KeyboardInput = {
+  up: KeyboardKey;
+  left: KeyboardKey;
+  down: KeyboardKey;
+  right: KeyboardKey;
+  space: KeyboardKey;
+  shift: KeyboardKey;
+  action: KeyboardKey;
+  drop: KeyboardKey;
+  cycleWeapons: KeyboardKey;
 }
 
 export default class Player implements SpriteContainer {
@@ -79,7 +94,7 @@ export default class Player implements SpriteContainer {
 
   public sprite?: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-  public cursor?: Phaser.Types.Input.Keyboard.CursorKeys;
+  public cursor?: KeyboardInput;
 
   public weapons: Weapon[] = [];
 
@@ -92,6 +107,8 @@ export default class Player implements SpriteContainer {
   public HeadsUpDisplay: HUD;
 
   private takingDamage = false;
+
+  private isSwitchingWeapons = false;
 
   constructor(props: PlayerProps) {
     this.scene = props.scene;
@@ -138,7 +155,7 @@ export default class Player implements SpriteContainer {
       action: Phaser.Input.Keyboard.KeyCodes.E,
       drop: Phaser.Input.Keyboard.KeyCodes.Q,
       cycleWeapons: Phaser.Input.Keyboard.KeyCodes.F,
-    }) as Phaser.Types.Input.Keyboard.CursorKeys;
+    }) as KeyboardInput;
     this.sprite = this.scene.physics.add.sprite(
       this.x,
       this.y,
@@ -270,6 +287,10 @@ export default class Player implements SpriteContainer {
         if (this.cursor.up.isDown && this.sprite.body.touching.down) {
           this.sprite.setVelocityY(-1 * this.gravity);
         }
+        if (this.cursor.cycleWeapons.isDown && !this.isSwitchingWeapons) {
+          this.isSwitchingWeapons = true;
+          this.switchWeapons();
+        }
         if (this.sprite.body.velocity.y < -10) {
           if (this.facingRight) {
             this.ascendingRight();
@@ -371,5 +392,16 @@ export default class Player implements SpriteContainer {
 
   private descendingLeft() {
     this.sprite?.anims.play(this.descendingLeftName, true);
+  }
+
+  public addWeapon(weapon: Weapon) {
+    this.weapons.push(weapon);
+  }
+
+  public switchWeapons() {
+    const currentWeaponIndex = this.weapons.indexOf(this.equippedWeapon);
+    const nextWeaponIndex = (currentWeaponIndex + 1) % this.weapons.length;
+    this.equippedWeapon = this.weapons[nextWeaponIndex];
+    setTimeout(() => { this.isSwitchingWeapons = false; }, 500);
   }
 }

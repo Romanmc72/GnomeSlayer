@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
 import { SpriteContainer } from '../types';
-import { WEAPON_ICON_DIMENSIONS } from '../weapons/weapon';
+import { WEAPON_ICON_DIMENSIONS } from '../constants';
 
 export default class HUD implements SpriteContainer {
   public scene: Phaser.Scene;

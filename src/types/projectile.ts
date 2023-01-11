@@ -53,4 +53,8 @@ export interface Projectile extends SpriteContainer {
    * @returns - Nothing.
    */
   stop: () => void;
+  /**
+   * Whether or not the projectile is still moving
+   */
+  isMoving: boolean;
 }

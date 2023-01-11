@@ -1,13 +1,13 @@
 import Phaser from 'phaser';
 import {
   Enemy,
-  Weapon,
+  MeleeOnlyWeapon,
 } from '../types';
 import Player from '../characters/player';
 import PlayerError from '../errors/player';
 import { INFINITY, WEAPON_ICON_DIMENSIONS } from '../constants';
 
-export default class Fist implements Weapon {
+export default class Fist implements MeleeOnlyWeapon {
   public ammo = INFINITY;
 
   public sprite?: Phaser.Physics.Arcade.Sprite;
@@ -119,23 +119,25 @@ export default class Fist implements Weapon {
   }
 
   public update(): void {
-    if (!(this.player.sprite)) {
-      throw new PlayerError('Attempted to access player attributes before creation');
-    }
-    this.sprite?.setVelocity(0, 0);
-    const xOffset = (this.frameWidth / 2)
-      + (
-        (this.player.facingRight ? 1 : -1)
-        * (this.frameWidth / 2)
-      );
-    const yOffset = this.frameHeight / 2;
-    this.sprite?.setX(this.player.sprite.body.x + xOffset);
-    this.sprite?.setY(this.player.sprite.body.y + yOffset);
-    if (this.isFired) {
-      this.setCollider(true);
-      this.displayFist();
-    } else {
-      this.setCollider(false);
+    if (this.player.equippedWeapon === this) {
+      if (!(this.player.sprite)) {
+        throw new PlayerError('Attempted to access player attributes before creation');
+      }
+      this.sprite?.setVelocity(0, 0);
+      const xOffset = (this.frameWidth / 2)
+        + (
+          (this.player.facingRight ? 1 : -1)
+          * (this.frameWidth / 2)
+        );
+      const yOffset = this.frameHeight / 2;
+      this.sprite?.setX(this.player.sprite.body.x + xOffset);
+      this.sprite?.setY(this.player.sprite.body.y + yOffset);
+      if (this.isFired) {
+        this.setCollider(true);
+        this.displayFist();
+      } else {
+        this.setCollider(false);
+      }
     }
   }
 
