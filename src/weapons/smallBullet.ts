@@ -1,16 +1,17 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
-import { Enemy, Projectile } from '../types';
+import { Level } from '../scenes/Level1';
+import { Enemy, Projectile, Weapon } from '../types';
 
 export interface SmallBulletProps {
-  scene: Phaser.Scene;
-  x: number;
-  y: number;
-  direction: number;
+  scene: Level;
+  weapon: Weapon;
 }
 
 export default class SmallBullet implements Projectile {
-  public scene: Phaser.Scene;
+  public scene: Level;
+
+  public weapon: Weapon;
 
   public velocity = 600;
 
@@ -18,17 +19,17 @@ export default class SmallBullet implements Projectile {
 
   public range = 1000;
 
-  public direction: number;
+  public direction = 0;
 
   public gravity = 0;
 
-  public origin_x: number;
+  public origin_x = 0;
 
-  public origin_y: number;
+  public origin_y = 0;
 
-  public x: number;
+  public x = 0;
 
-  public y: number;
+  public y = 0;
 
   public isMoving = false;
 
@@ -36,32 +37,43 @@ export default class SmallBullet implements Projectile {
 
   public sprite?: Phaser.Physics.Arcade.Sprite;
 
+  public colliders: Phaser.Physics.Arcade.Collider[] = [];
+
   constructor(props: SmallBulletProps) {
     this.scene = props.scene;
-    this.origin_x = props.x;
-    this.origin_y = props.y;
-    this.x = this.origin_x;
-    this.y = this.origin_y;
-    this.direction = props.direction;
+    this.weapon = props.weapon;
   }
 
   public launch(x: number, y: number, direction: number) {
-    this.origin_x = x;
-    this.origin_y = y;
-    this.create();
+    this.sprite!.setX(x);
+    this.sprite!.setY(y);
     this.sprite!.setVisible(true);
     this.isMoving = true;
     this.sprite!.setGravityY(this.gravity);
     this.sprite!.setVelocityX(direction * this.velocity);
+    if (this.weapon.player.facingRight) {
+      this.sprite!.flipX = false;
+    } else {
+      this.sprite!.flipX = true;
+    }
   }
 
   public hit(object: Player | Enemy): void {
-    object.takeDamage(this.damage);
-    this.stop();
+    if (this.isMoving) {
+      object.takeDamage(this.damage);
+      if (object.health <= 0) {
+        object.die();
+      }
+      this.stop();
+    }
   }
 
   public stop(): void {
     this.isMoving = false;
+    this.colliders.forEach((collider) => {
+      // eslint-disable-next-line no-param-reassign
+      collider.active = false;
+    });
   }
 
   public preload(): void {
@@ -74,15 +86,26 @@ export default class SmallBullet implements Projectile {
       this.origin_y,
       this.imageName,
     );
+    this.sprite.setGravityY(0);
+    this.sprite.setVelocity(0, 0);
     this.isMoving = false;
     this.sprite.setVisible(false);
+    this.scene.physics.add.collider(
+      this.sprite!,
+      this.scene.ground!,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      (_o1, _o2) => {
+        this.stop();
+        // this.sprite?.setVelocityX(0);
+      },
+    );
   }
 
   public update(): void {
-    this.sprite?.setGravity(0, 0);
     if (!this.isMoving) {
+      this.sprite!.setVelocity(0, 0);
+      this.sprite!.setGravity(0, 0);
       this.sprite!.setVisible(false);
-      this.sprite!.destroy();
     }
   }
 }

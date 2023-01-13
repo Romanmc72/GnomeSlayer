@@ -2,6 +2,7 @@ import { SpriteContainer } from './spriteContainer';
 import { Projectile } from './projectile';
 import Player from '../characters/player';
 import { Enemy } from './enemy';
+import Clip from '../weapons/clip';
 
 /**
  * Represents a weapon whose ammo is  either finite or infinite
@@ -25,7 +26,7 @@ export interface Weapon extends SpriteContainer {
   /**
    * The ammunition for the weapon
    */
-  ammo: number | Infinity;
+  ammo: Projectile[] | Infinity;
   /**
    * Whether or not the weapon can currently be fired
    */
@@ -48,31 +49,49 @@ export interface Weapon extends SpriteContainer {
    * @returns - Nothing
    */
   displayIcon: (display: boolean) => void;
+  /**
+   * Reloads the weapon with a new clip from the available ammo
+   */
+  reload: () => void;
+  /**
+   * Whether or not this is a Melee weapon
+   */
+  isMelee: boolean;
+  /**
+   * Whether or not this is a projectile weapon
+   */
+  isProjectile: boolean;
 }
 
+/**
+ * For weapons whose only means of damage is melee attack
+ */
 export interface MeleeOnlyWeapon extends Weapon {
   /**
    * How much melee damage this weapon does
    */
   meleeDamage: number;
   /**
+   * An optional collider object if this weapon detects collisions
+   */
+  collider?: Phaser.Physics.Arcade.Collider;
+  /**
    * The method to call when the weapon collides with an enemy
    * @param enemy - The enemy to collide with on Melee
    * @returns Nothing
    */
   onHit: (enemy: Enemy) => void;
-  /**
-   * An optional collider object if this weapon detects collisions
-   */
-  collider?: Phaser.Physics.Arcade.Collider;
 }
 
-export interface ProjectileOnlyWeapon extends Weapon {
+/**
+ * For weapons whose only means of damage is launching projectiles
+ */
+export interface ProjectileOnlyWeapon<T extends Projectile> extends Weapon {
   /**
-   * The projectile that this weapon launches (if it has one)
+   * The projectile type from which to preload the image
    */
-  projectile: Projectile;
-    /**
+  projectile: T;
+  /**
    * How many seconds it takes to reload the weapon
    */
   reloadTime?: number;
@@ -83,15 +102,12 @@ export interface ProjectileOnlyWeapon extends Weapon {
   /**
    * How many rounds are in the current clip
    */
-  currentClip?: number;
+  currentClip: Clip<T>;
   /**
    * If the weapon fires projectiles, then these are the projectiles it fires
    */
   ammoType?: Projectile;
-  /**
-   * Reloads the weapon with a new clip from the available ammo
-   */
-  reload: () => void;
 }
 
-export interface MeleeAndProjectileWeapon extends MeleeOnlyWeapon, ProjectileOnlyWeapon {}
+export interface MeleeAndProjectileWeapon<T extends Projectile> extends MeleeOnlyWeapon,
+  ProjectileOnlyWeapon<T> {}

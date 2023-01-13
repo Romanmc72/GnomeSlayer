@@ -14,6 +14,10 @@ export interface SpriteContainer {
    */
   sprite?: Phaser.Physics.Arcade.Sprite;
   /**
+   * The array of physics collisions/overlaps to detect
+   */
+  colliders: Phaser.Physics.Arcade.Collider[];
+  /**
    * To be run during the preload phase of the scene.
    * @returns Nothing. Uses the scene to preload the sprite sheet
    */

@@ -16,6 +16,10 @@ export default class Fist implements MeleeOnlyWeapon {
 
   public canDrop = false;
 
+  public isMelee = true;
+
+  public isProjectile = false;
+
   public scene: Phaser.Scene;
 
   public player: Player;
@@ -55,6 +59,8 @@ export default class Fist implements MeleeOnlyWeapon {
   public icon?: Phaser.Physics.Arcade.Image;
 
   private iconName = `${this.spriteName}Icon`;
+
+  public colliders: Phaser.Physics.Arcade.Collider[] = [];
 
   constructor(scene: Phaser.Scene, player: Player) {
     this.scene = scene;
@@ -185,6 +191,12 @@ export default class Fist implements MeleeOnlyWeapon {
       } else if (this.sprite?.body.touching.right) {
         enemy.sprite?.setVelocityX(this.blowback);
       }
+      if (enemy.health <= 0) {
+        enemy.die();
+      }
     }
   }
+
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
+  public reload(): void {}
 }

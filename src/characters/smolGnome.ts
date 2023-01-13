@@ -1,10 +1,17 @@
 import Phaser from 'phaser';
-import Weapon from '../weapons/weapon';
-import Enemy from './enemy';
+import { Level } from '../scenes/Level1';
+import {
+  Enemy,
+  Projectile,
+  ProjectileOnlyWeapon,
+  Weapon,
+} from '../types';
 import Player from './player';
+import { MeleeOnlyWeapon } from '../types/weapon';
+import { INFINITY } from '../constants';
 
 export default class SmolGnome implements Enemy {
-  public scene: Phaser.Scene;
+  public scene: Level;
 
   public health = 30;
 
@@ -34,21 +41,27 @@ export default class SmolGnome implements Enemy {
 
   private frameRate = 20;
 
-  private turnRightName: string;
+  private turnName: string;
 
-  private turnLeftName: string;
+  private turnFrameStart = 1;
 
-  private runRightName: string;
+  private turnFrameSize = 6;
 
-  private runLeftName: string;
+  private runName: string;
 
-  private hurtRightName: string;
+  private runFrameStart = this.turnFrameStart + this.turnFrameSize;
 
-  private hurtLeftName: string;
+  private runFrameSize = 2;
 
-  private deathAnimation: string;
+  private hurtName: string;
 
-  private deathFrames = 13;
+  private hurtFrame = 0;
+
+  private deathName: string;
+
+  private deathFrameStart = this.runFrameStart + this.runFrameSize;
+
+  private deathFrameSize = 13;
 
   private immunities: Weapon[] = [];
 
@@ -62,18 +75,19 @@ export default class SmolGnome implements Enemy {
 
   public id: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, id: number) {
+  public colliders: Phaser.Physics.Arcade.Collider[] = [];
+
+  public facingRight = false;
+
+  constructor(scene: Level, x: number, y: number, id: number) {
     this.scene = scene;
     this.x = x;
     this.y = y;
     this.id = id;
-    this.turnRightName = `${this.name}turnRight`;
-    this.turnLeftName = `${this.name}turnLeft`;
-    this.runRightName = `${this.name}runRight`;
-    this.runLeftName = `${this.name}runLeft`;
-    this.hurtRightName = `${this.name}hurtRight`;
-    this.hurtLeftName = `${this.name}hurtLeft`;
-    this.deathAnimation = `${this.name}die`;
+    this.turnName = `${this.name}Turn`;
+    this.runName = `${this.name}Run`;
+    this.hurtName = `${this.name}Hurt`;
+    this.deathName = `${this.name}Die`;
   }
 
   private resetDamage() {
@@ -116,12 +130,13 @@ export default class SmolGnome implements Enemy {
     setTimeout(() => this.resetDoingSomething(), this.hitRecoveryPeriodMs);
     this.sprite?.setVelocityY(-150);
     if (this.sprite!.body.touching.left) {
+      this.facingRight = false;
       this.sprite?.setVelocityX(150);
-      this.sprite!.anims.play(this.hurtRightName, true);
     } else {
+      this.facingRight = true;
       this.sprite?.setVelocityX(-150);
-      this.sprite!.anims.play(this.hurtLeftName, true);
     }
+    this.sprite!.anims.play(this.hurtName, true);
   }
 
   public isImmune(weapon: Weapon): boolean {
@@ -133,13 +148,14 @@ export default class SmolGnome implements Enemy {
 
   public die(): void {
     this.isAlive = false;
+    this.disableColliders();
   }
 
   private andStayDead() {
     this.sprite?.setVelocity(0, 0);
     const animationIndex = (this.sprite?.anims.currentFrame?.index ?? -1 + 1);
-    if (animationIndex < this.deathFrames) {
-      this.sprite?.anims.play(this.deathAnimation, true);
+    if (animationIndex < this.deathFrameSize) {
+      this.sprite?.anims.play(this.deathName, true);
     } else {
       this.sprite?.anims.pause(this.sprite.anims.currentAnim.frames[-1]);
     }
@@ -158,84 +174,140 @@ export default class SmolGnome implements Enemy {
     this.sprite.setGravityY(300);
     this.sprite.setCollideWorldBounds(true);
     this.scene.anims.create({
-      key: this.turnLeftName,
+      key: this.turnName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: 0,
-        end: 5,
+        start: this.turnFrameStart,
+        end: this.turnFrameStart + this.turnFrameSize - 1,
       }),
       frameRate: this.frameRate / 4,
       repeat: -1,
       yoyo: true,
     });
     this.scene.anims.create({
-      key: this.turnRightName,
+      key: this.hurtName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: 8,
-        end: 14,
-      }),
-      frameRate: this.frameRate / 4,
-      repeat: -1,
-      yoyo: true,
-    });
-    this.scene.anims.create({
-      key: this.hurtLeftName,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: 6,
-        end: 6,
+        start: this.hurtFrame,
+        end: this.hurtFrame,
       }),
     });
     this.scene.anims.create({
-      key: this.hurtRightName,
+      key: this.runName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: 7,
-        end: 7,
-      }),
-    });
-    this.scene.anims.create({
-      key: this.runLeftName,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: 14,
-        end: 15,
+        start: this.runFrameStart,
+        end: this.runFrameStart + this.runFrameSize - 1,
       }),
       repeat: -1,
     });
     this.scene.anims.create({
-      key: this.runRightName,
+      key: this.deathName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: 16,
-        end: 17,
-      }),
-      repeat: -1,
-    });
-    this.scene.anims.create({
-      key: this.deathAnimation,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: 18,
-        end: 18 + this.deathFrames,
+        start: this.deathFrameStart,
+        end: this.deathFrameStart + this.deathFrameSize - 1,
       }),
       frameRate: this.frameRate / 4,
       repeat: 0,
     });
+    // Not adding to the colliders array because this should always be enabled
+    this.scene.physics.add.collider(this.sprite, this.scene.ground!);
+    this.colliders.push(
+      this.scene.physics.add.collider(
+        this.scene.player.sprite!,
+        this.sprite,
+        (_o1, _o2) => {
+          this.attack(this.scene.player);
+        },
+      ),
+    );
+    this.scene.player.weapons.forEach((weapon) => {
+      if (weapon.isMelee) {
+        const meleeWeapon = weapon as MeleeOnlyWeapon;
+        this.colliders.push(
+          this.scene.physics.add.overlap(
+            meleeWeapon.sprite!,
+            this.sprite!,
+            (_o1, _o2) => {
+              meleeWeapon.onHit(this);
+              if (this.health <= 0) {
+                this.die();
+              }
+            },
+          ),
+        );
+      }
+      if (weapon.isProjectile) {
+        const projectileWeapon = weapon as ProjectileOnlyWeapon<Projectile>;
+        if (projectileWeapon.ammo !== INFINITY) {
+          projectileWeapon.ammo.forEach((projectile: Projectile) => {
+            const collider = this.scene.physics.add.collider(
+              projectile.sprite!,
+              this.sprite!,
+              (_o1, _o2) => {
+                projectile.hit(this);
+                if (this.health <= 0) {
+                  this.die();
+                }
+              },
+            );
+            this.colliders.push(collider);
+            projectile.colliders.push(collider);
+          });
+        }
+        projectileWeapon.currentClip.ammo.forEach((projectile) => {
+          const collider = this.scene.physics.add.collider(
+            projectile.sprite!,
+            this.sprite!,
+            (_o1, _o2) => {
+              projectile.hit(this);
+              if (this.health <= 0) {
+                this.die();
+              }
+            },
+          );
+          this.colliders.push(collider);
+          projectile.colliders.push(collider);
+        });
+      }
+    });
+    this.colliders.push(
+      this.scene.physics.add.collider(
+        this.scene.player.sprite!,
+        this.sprite,
+        (_o1, _o2) => {
+          this.attack(this.scene.player);
+        },
+      ),
+    );
+  }
+
+  private disableColliders(): void {
+    this.colliders.forEach((collider) => {
+      // eslint-disable-next-line no-param-reassign
+      collider.active = false;
+    });
   }
 
   private runLeft() {
+    this.facingRight = false;
     this.sprite?.setVelocityX(this.speed * -1);
-    this.sprite?.anims.play(this.runLeftName, true);
+    this.sprite?.anims.play(this.runName, true);
   }
 
   private runRight() {
+    this.facingRight = true;
     this.sprite?.setVelocityX(this.speed);
-    this.sprite?.anims.play(this.runRightName, true);
+    this.sprite?.anims.play(this.runName, true);
   }
 
   private turnRight() {
+    this.facingRight = true;
     this.sprite?.setVelocityX(0);
-    this.sprite?.anims.play(this.turnRightName, true);
+    this.sprite?.anims.play(this.turnName, true);
   }
 
   private turnLeft() {
+    this.facingRight = false;
     this.sprite?.setVelocityX(0);
-    this.sprite?.anims.play(this.turnLeftName, true);
+    this.sprite?.anims.play(this.turnName, true);
   }
 
   public update(): void {
@@ -265,6 +337,11 @@ export default class SmolGnome implements Enemy {
       }
     } else {
       this.andStayDead();
+    }
+    if (this.facingRight) {
+      this.sprite!.flipX = false;
+    } else {
+      this.sprite!.flipX = true;
     }
   }
 }

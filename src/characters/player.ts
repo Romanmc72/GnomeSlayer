@@ -3,6 +3,7 @@ import PlayerError from '../errors/player';
 import { SpriteContainer, Weapon } from '../types';
 import Fist from '../weapons/fist';
 import HUD from '../objects/hud';
+import { Level } from '../scenes/Level1';
 
 const GUY_NAME = 'dumbguy';
 
@@ -10,7 +11,7 @@ const GUY_NAME = 'dumbguy';
  * The optional and require properties to initialize a player
  */
 export interface PlayerProps {
-  scene: Phaser.Scene;
+  scene: Level;
   x: number;
   y: number;
   spriteName?: string;
@@ -25,6 +26,9 @@ type KeyboardKey = {
   isDown: boolean;
 }
 
+/**
+ * Using this to make the compiler happy when type checking the cursors
+ */
 type KeyboardInput = {
   up: KeyboardKey;
   left: KeyboardKey;
@@ -33,12 +37,13 @@ type KeyboardInput = {
   space: KeyboardKey;
   shift: KeyboardKey;
   action: KeyboardKey;
+  reload: KeyboardKey;
   drop: KeyboardKey;
   cycleWeapons: KeyboardKey;
 }
 
 export default class Player implements SpriteContainer {
-  public scene: Phaser.Scene;
+  public scene: Level;
 
   private x: number;
 
@@ -62,33 +67,31 @@ export default class Player implements SpriteContainer {
 
   private turnFrameSize = 9;
 
-  private runningFrameStart = 18;
+  private runningFrameStart = this.turnFrameStart + this.turnFrameSize;
 
   private runningFrameSize = 13;
 
-  private runLeftName: string;
+  private runName: string;
 
-  private runRightName: string;
+  private turnName: string;
 
-  private turnLeftName: string;
+  private descendingName: string;
 
-  private turnRightName: string;
+  private descendingFrame = this.runningFrameStart + this.runningFrameSize;
 
-  private ascendingLeftName: string;
+  private ascendingName: string;
 
-  private ascendingRightName: string;
+  private ascendingFrame = this.descendingFrame + 1;
 
-  private descendingLeftName: string;
+  private deathName: string;
 
-  private descendingRightName: string;
+  private hurtName: string;
 
-  private deathAnimation: string;
+  private deathFrameStart = this.descendingFrame + 1;
 
-  private hurtRight: string;
+  private hurtFrameSize = 4;
 
-  private hurtLeft: string;
-
-  private deathFrames = 17;
+  private deathFrameSize = 17;
 
   public facingRight = true;
 
@@ -102,13 +105,15 @@ export default class Player implements SpriteContainer {
 
   public health: number;
 
-  public isDead = false;
+  public isAlive = true;
 
   public HeadsUpDisplay: HUD;
 
   private takingDamage = false;
 
   private isSwitchingWeapons = false;
+
+  public colliders: Phaser.Physics.Arcade.Collider[] = [];
 
   constructor(props: PlayerProps) {
     this.scene = props.scene;
@@ -120,17 +125,12 @@ export default class Player implements SpriteContainer {
     this.spriteSheet = props.spriteSheet ?? `${GUY_NAME}.png`;
     this.frameRate = props.frameRate ?? 20;
     this.health = props.health ?? 100;
-    this.runLeftName = `${this.spriteName}RunLeft`;
-    this.runRightName = `${this.spriteName}RunRight`;
-    this.turnLeftName = `${this.spriteName}TurnLeft`;
-    this.turnRightName = `${this.spriteName}TurnRight`;
-    this.ascendingLeftName = `${this.spriteName}AscendingLeft`;
-    this.ascendingRightName = `${this.spriteName}AscendingRight`;
-    this.descendingLeftName = `${this.spriteName}DescendingLeft`;
-    this.descendingRightName = `${this.spriteName}DescendingRight`;
-    this.hurtRight = `${this.spriteName}HurtRight`;
-    this.hurtLeft = `${this.spriteName}HurtLeft`;
-    this.deathAnimation = `${this.spriteName}Death`;
+    this.runName = `${this.spriteName}Run`;
+    this.turnName = `${this.spriteName}Turn`;
+    this.ascendingName = `${this.spriteName}Ascending`;
+    this.descendingName = `${this.spriteName}Descending`;
+    this.hurtName = `${this.spriteName}Hurt`;
+    this.deathName = `${this.spriteName}Death`;
     this.HeadsUpDisplay = new HUD(this.scene, this);
   }
 
@@ -153,6 +153,7 @@ export default class Player implements SpriteContainer {
       space: Phaser.Input.Keyboard.KeyCodes.SPACE,
       shift: Phaser.Input.Keyboard.KeyCodes.SHIFT,
       action: Phaser.Input.Keyboard.KeyCodes.E,
+      reload: Phaser.Input.Keyboard.KeyCodes.R,
       drop: Phaser.Input.Keyboard.KeyCodes.Q,
       cycleWeapons: Phaser.Input.Keyboard.KeyCodes.F,
     }) as KeyboardInput;
@@ -164,8 +165,9 @@ export default class Player implements SpriteContainer {
     this.sprite.body.setGravityY(this.gravity);
     this.sprite.setBounce(0.2);
     this.sprite.setCollideWorldBounds(true);
+    this.scene.physics.add.collider(this.sprite, this.scene.ground!);
     this.scene.anims.create({
-      key: this.runRightName,
+      key: this.runName,
       frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
         start: this.runningFrameStart,
         end: this.runningFrameStart + this.runningFrameSize - 1,
@@ -174,16 +176,7 @@ export default class Player implements SpriteContainer {
       repeat: -1,
     });
     this.scene.anims.create({
-      key: this.runLeftName,
-      frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
-        start: this.runningFrameStart + this.runningFrameSize,
-        end: this.runningFrameStart + (2 * this.runningFrameSize) - 1,
-      }),
-      frameRate: this.frameRate,
-      repeat: -1,
-    });
-    this.scene.anims.create({
-      key: this.turnRightName,
+      key: this.turnName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
         start: this.turnFrameStart,
         end: this.turnFrameStart + this.turnFrameSize - 1,
@@ -193,73 +186,36 @@ export default class Player implements SpriteContainer {
       yoyo: true,
     });
     this.scene.anims.create({
-      key: this.turnLeftName,
+      key: this.ascendingName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: this.turnFrameStart + this.turnFrameSize,
-        end: this.turnFrameStart + (this.turnFrameSize * 2) - 1,
-      }),
-      frameRate: this.frameRate / 4,
-      repeat: -1,
-      yoyo: true,
-    });
-    const airborneFrameStart = this.runningFrameStart + (2 * this.runningFrameSize);
-    this.scene.anims.create({
-      key: this.ascendingLeftName,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: airborneFrameStart,
-        end: airborneFrameStart,
+        start: this.ascendingFrame,
+        end: this.ascendingFrame,
       }),
       frameRate: this.frameRate,
       repeat: -1,
     });
     this.scene.anims.create({
-      key: this.descendingLeftName,
+      key: this.descendingName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: airborneFrameStart + 1,
-        end: airborneFrameStart + 1,
+        start: this.descendingFrame,
+        end: this.descendingFrame,
       }),
       frameRate: this.frameRate,
       repeat: -1,
     });
     this.scene.anims.create({
-      key: this.descendingRightName,
+      key: this.deathName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: airborneFrameStart + 2,
-        end: airborneFrameStart + 2,
-      }),
-      frameRate: this.frameRate,
-      repeat: -1,
-    });
-    this.scene.anims.create({
-      key: this.ascendingRightName,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: airborneFrameStart + 3,
-        end: airborneFrameStart + 3,
-      }),
-      frameRate: this.frameRate,
-      repeat: -1,
-    });
-    this.scene.anims.create({
-      key: this.deathAnimation,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: airborneFrameStart + 4,
-        end: airborneFrameStart + 4 + this.deathFrames,
+        start: this.deathFrameStart,
+        end: this.deathFrameStart + this.deathFrameSize,
       }),
       frameRate: this.frameRate / 4,
     });
     this.scene.anims.create({
-      key: this.hurtRight,
+      key: this.hurtName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: airborneFrameStart + 4,
-        end: airborneFrameStart + 4 + 4,
-      }),
-      frameRate: this.frameRate,
-    });
-    this.scene.anims.create({
-      key: this.hurtLeft,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: airborneFrameStart + 4 + this.deathFrames,
-        end: airborneFrameStart + 4 + this.deathFrames + 4,
+        start: this.deathFrameStart,
+        end: this.deathFrameStart + this.hurtFrameSize,
       }),
       frameRate: this.frameRate,
     });
@@ -275,7 +231,7 @@ export default class Player implements SpriteContainer {
       );
     }
 
-    if (!this.isDead) {
+    if (this.isAlive) {
       if (!this.takingDamage) {
         if (this.cursor.left.isDown) {
           this.runLeft();
@@ -292,34 +248,28 @@ export default class Player implements SpriteContainer {
           this.switchWeapons();
         }
         if (this.sprite.body.velocity.y < -10) {
-          if (this.facingRight) {
-            this.ascendingRight();
-          } else {
-            this.ascendingLeft();
-          }
+          this.ascending();
         } else if (this.sprite.body.velocity.y > 10) {
-          if (this.facingRight) {
-            this.descendingRight();
-          } else {
-            this.descendingLeft();
-          }
+          this.descending();
         } else if (this.sprite.body.velocity.x === 0) {
-          if (this.facingRight) {
-            this.turnRight();
-          } else {
-            this.turnLeft();
-          }
+          this.turn();
         }
-      } else if (this.facingRight) {
-        this.sprite.anims.play(this.hurtRight, true);
       } else {
-        this.sprite.anims.play(this.hurtLeft, true);
+        this.sprite.anims.play(this.hurtName, true);
       }
       if (this.cursor.space.isDown) {
         this.equippedWeapon.fire();
       }
+      if (this.cursor.reload.isDown) {
+        this.equippedWeapon.reload();
+      }
     } else {
       this.andStayDead();
+    }
+    if (this.facingRight) {
+      this.sprite.flipX = false;
+    } else {
+      this.sprite.flipX = true;
     }
     this.weapons.forEach((weapon) => weapon.update());
     this.HeadsUpDisplay.update();
@@ -337,14 +287,14 @@ export default class Player implements SpriteContainer {
   }
 
   public die(): void {
-    this.isDead = true;
+    this.isAlive = false;
   }
 
   private andStayDead(): void {
     this.sprite?.setVelocity(0, 0);
     const animationIndex = (this.sprite?.anims.currentFrame?.index ?? -1 + 1);
-    if (animationIndex < this.deathFrames) {
-      this.sprite?.anims.play(this.deathAnimation, true);
+    if (animationIndex < this.deathFrameSize) {
+      this.sprite?.anims.play(this.deathName, true);
     } else {
       this.sprite?.anims.pause(this.sprite.anims.currentAnim.frames[-1]);
     }
@@ -359,39 +309,25 @@ export default class Player implements SpriteContainer {
   private runLeft() {
     this.facingRight = false;
     this.sprite?.setVelocityX(-1 * this.speed);
-    this.playIfNotTakingDamage(() => this.sprite?.anims.play(this.runLeftName, true));
+    this.playIfNotTakingDamage(() => this.sprite?.anims.play(this.runName, true));
   }
 
   private runRight() {
     this.facingRight = true;
     this.sprite?.setVelocityX(this.speed);
-    this.sprite?.anims.play(this.runRightName, true);
+    this.sprite?.anims.play(this.runName, true);
   }
 
-  private turnLeft() {
-    this.facingRight = false;
-    this.sprite?.anims.play(this.turnLeftName, true);
+  private turn() {
+    this.sprite?.anims.play(this.turnName, true);
   }
 
-  private turnRight() {
-    this.facingRight = true;
-    this.sprite?.anims.play(this.turnRightName, true);
+  private ascending() {
+    this.sprite?.anims.play(this.ascendingName, true);
   }
 
-  private ascendingRight() {
-    this.sprite?.anims.play(this.ascendingRightName, true);
-  }
-
-  private ascendingLeft() {
-    this.sprite?.anims.play(this.ascendingLeftName, true);
-  }
-
-  private descendingRight() {
-    this.sprite?.anims.play(this.descendingRightName, true);
-  }
-
-  private descendingLeft() {
-    this.sprite?.anims.play(this.descendingLeftName, true);
+  private descending() {
+    this.sprite?.anims.play(this.descendingName, true);
   }
 
   public addWeapon(weapon: Weapon) {
