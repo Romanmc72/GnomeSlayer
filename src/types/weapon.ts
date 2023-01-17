@@ -16,7 +16,15 @@ export interface Weapon extends SpriteContainer {
   /**
    * The player to which this weapon belongs
    */
-  player: Player;
+  player?: Player;
+  /**
+   * If the weapon does not belong to a player, then this is its X coordinate
+   */
+  x?: number;
+  /**
+   * If the weapon does not belong to a player, then this is its Y coordinate
+   */
+  y?: number;
   /**
    * The function that fires the weapon when called. Should perform both melee
    * and projectile if weapon does both
@@ -39,6 +47,10 @@ export interface Weapon extends SpriteContainer {
    * Whether or not this weapon can be dropped
    */
   canDrop: boolean;
+  /**
+   * Whether or not the weapon is dropped
+   */
+  isDropped: boolean;
   /**
    * The icon for the weapon.
    */

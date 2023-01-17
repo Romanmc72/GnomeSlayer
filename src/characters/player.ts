@@ -1,9 +1,8 @@
 import Phaser from 'phaser';
 import PlayerError from '../errors/player';
-import { SpriteContainer, Weapon } from '../types';
+import { Level, SpriteContainer, Weapon } from '../types';
 import Fist from '../weapons/fist';
 import HUD from '../objects/hud';
-import { Level } from '../scenes/Level1';
 
 const GUY_NAME = 'dumbguy';
 
@@ -109,7 +108,7 @@ export default class Player implements SpriteContainer {
 
   public HeadsUpDisplay: HUD;
 
-  private takingDamage = false;
+  public takingDamage = false;
 
   private isSwitchingWeapons = false;
 
@@ -117,9 +116,11 @@ export default class Player implements SpriteContainer {
 
   constructor(props: PlayerProps) {
     this.scene = props.scene;
+    const fist = new Fist(this.scene, this);
+    props.weapons?.push(fist);
     this.x = props.x;
     this.y = props.y;
-    this.weapons = props.weapons ?? [new Fist(this.scene, this)];
+    this.weapons = props.weapons ?? [fist];
     this.equippedWeapon = props.equippedWeapon ?? this.weapons[0];
     this.spriteName = props.spriteName ?? GUY_NAME;
     this.spriteSheet = props.spriteSheet ?? `${GUY_NAME}.png`;
@@ -263,6 +264,9 @@ export default class Player implements SpriteContainer {
       if (this.cursor.reload.isDown) {
         this.equippedWeapon.reload();
       }
+      if (this.cursor.drop.isDown) {
+        this.dropWeapon();
+      }
     } else {
       this.andStayDead();
     }
@@ -273,6 +277,7 @@ export default class Player implements SpriteContainer {
     }
     this.weapons.forEach((weapon) => weapon.update());
     this.HeadsUpDisplay.update();
+    this.equippedWeapon.sprite!.depth = -100;
   }
 
   public takeDamage(damage: number): void {
@@ -306,38 +311,61 @@ export default class Player implements SpriteContainer {
     }
   }
 
-  private runLeft() {
+  private runLeft(): void {
     this.facingRight = false;
     this.sprite?.setVelocityX(-1 * this.speed);
     this.playIfNotTakingDamage(() => this.sprite?.anims.play(this.runName, true));
   }
 
-  private runRight() {
+  private runRight(): void {
     this.facingRight = true;
     this.sprite?.setVelocityX(this.speed);
-    this.sprite?.anims.play(this.runName, true);
+    this.playIfNotTakingDamage(() => this.sprite?.anims.play(this.runName, true));
   }
 
-  private turn() {
-    this.sprite?.anims.play(this.turnName, true);
+  private turn(): void {
+    this.playIfNotTakingDamage(() => this.sprite?.anims.play(this.turnName, true));
   }
 
-  private ascending() {
+  private ascending(): void {
     this.sprite?.anims.play(this.ascendingName, true);
   }
 
-  private descending() {
+  private descending(): void {
     this.sprite?.anims.play(this.descendingName, true);
   }
 
-  public addWeapon(weapon: Weapon) {
+  public addWeapon(weapon: Weapon): void {
+    // eslint-disable-next-line no-param-reassign
+    weapon.player = this;
     this.weapons.push(weapon);
   }
 
-  public switchWeapons() {
+  public switchWeapons(): void {
     const currentWeaponIndex = this.weapons.indexOf(this.equippedWeapon);
     const nextWeaponIndex = (currentWeaponIndex + 1) % this.weapons.length;
+    this.equippedWeapon.displayIcon(false);
     this.equippedWeapon = this.weapons[nextWeaponIndex];
+    this.equippedWeapon.displayIcon(true);
     setTimeout(() => { this.isSwitchingWeapons = false; }, 500);
+  }
+
+  public dropWeapon(): void {
+    if (this.equippedWeapon.canDrop) {
+      const weaponToDrop = this.equippedWeapon;
+      weaponToDrop.displayIcon(false);
+      this.switchWeapons();
+      this.weapons.forEach((weapon, index) => {
+        if (weapon === weaponToDrop) {
+          const removed = this.weapons.splice(index, 1)[0];
+          removed.sprite!.setVelocityY(-this.gravity);
+          removed.sprite!.setGravityY(this.gravity);
+          removed.x = this.sprite?.body.x;
+          removed.y = this.sprite?.body.y;
+          removed.player = undefined;
+          this.scene.objects.push(removed);
+        }
+      });
+    }
   }
 }

@@ -1,7 +1,11 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
-import { Level } from '../scenes/Level1';
-import { Enemy, Projectile, Weapon } from '../types';
+import {
+  Enemy,
+  Level,
+  Projectile,
+  Weapon,
+} from '../types';
 
 export interface SmallBulletProps {
   scene: Level;
@@ -51,7 +55,7 @@ export default class SmallBullet implements Projectile {
     this.isMoving = true;
     this.sprite!.setGravityY(this.gravity);
     this.sprite!.setVelocityX(direction * this.velocity);
-    if (this.weapon.player.facingRight) {
+    if (this.weapon.player!.facingRight) {
       this.sprite!.flipX = false;
     } else {
       this.sprite!.flipX = true;

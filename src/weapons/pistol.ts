@@ -1,10 +1,9 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
-import { ProjectileOnlyWeapon } from '../types';
+import { Level, ProjectileOnlyWeapon } from '../types';
 import { WEAPON_ICON_DIMENSIONS } from '../constants';
 import SmallBullet, { SmallBulletProps } from './smallBullet';
 import Clip from './clip';
-import { Level } from '../scenes/Level1';
 
 /**
  * The properties required to instantiate a pistol
@@ -17,7 +16,7 @@ export interface PistolProps {
   /**
    * The player that the pistol belongs to
    */
-  player: Player;
+  player?: Player;
   /**
    * The amount of ammo in the current clip
    */
@@ -26,6 +25,14 @@ export interface PistolProps {
    * The amount of ammo available to reload that is not currently in the clip
    */
   ammo: number;
+  /**
+   * The x coordinate to spawn the weapon at, if not carried by a player
+   */
+  x?: number;
+  /**
+   * The y coordinate to spawn the weapon at, if not carried by a player
+   */
+  y?: number;
 }
 
 /**
@@ -37,7 +44,11 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
 
   public scene: Level;
 
-  public player: Player;
+  public player?: Player;
+
+  public x?: number;
+
+  public y?: number;
 
   public ammo: SmallBullet[];
 
@@ -53,9 +64,13 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
 
   public reloadTime = 2000;
 
+  public isReloading = false;
+
   public rateOfFire = 2;
 
   public canDrop = true;
+
+  public isDropped: boolean;
 
   public isMelee = false;
 
@@ -75,11 +90,11 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
 
   private emptyAnimation = `${this.imageName}Empty`;
 
-  private frameWidth = 10;
+  private frameWidth = 29;
 
-  private frameHeight = 7;
+  private frameHeight = 20;
 
-  private frameRate = 4;
+  private frameRate = 20;
 
   private firedBullets: SmallBullet[] = [];
 
@@ -97,6 +112,13 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
     };
     this.projectile = new SmallBullet(bulletProps);
     this.player = props.player;
+    this.x = props.x;
+    this.y = props.y;
+    if (this.player) {
+      this.isDropped = false;
+    } else {
+      this.isDropped = true;
+    }
     this.ammo = [];
     for (let eachBullet = 0; eachBullet < props.ammo; eachBullet += 1) {
       this.ammo.push(new SmallBullet(bulletProps));
@@ -110,22 +132,20 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
   }
 
   public fire(): void {
-    if (this.canFire) {
+    if (this.canFire && !this.isReloading) {
       if (this.currentClip.isEmpty()) {
-        this.canFire = false;
         this.reload();
-        setTimeout(() => { this.canFire = true; }, this.reloadTime);
       } else {
         const bullet = this.currentClip.fire();
         if (bullet) {
-          const x = this.player.facingRight
-            ? this.player.sprite!.body.x + this.player.frameWidth
-            : this.player.sprite!.body.x;
-          const y = this.player.sprite!.body.y + this.player.frameHeight / 2;
+          const x = this.player!.facingRight
+            ? this.player!.sprite!.body.x + this.player!.frameWidth + this.frameWidth
+            : this.player!.sprite!.body.x - this.frameWidth;
+          const y = this.player!.sprite!.body.y + this.player!.frameHeight / 2;
           bullet.launch(
             x,
             y,
-            this.player.facingRight ? 1 : -1,
+            this.player!.facingRight ? 1 : -1,
           );
           this.firedBullets.push(bullet);
         }
@@ -142,7 +162,8 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
 
   public reload(): void {
     this.updateCanReload();
-    if (this.canReload) {
+    if (this.canReload && !this.isReloading) {
+      this.isReloading = true;
       const bulletsToReload = Math.min(
         this.clipSize - this.currentClip.ammo.length,
         this.ammo.length,
@@ -153,6 +174,7 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
           this.currentClip.addProjectile(bullet);
         }
       }
+      setTimeout(() => { this.isReloading = false; }, this.reloadTime);
       this.updateCanReload();
     }
   }
@@ -177,19 +199,22 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
       WEAPON_ICON_DIMENSIONS.y,
       this.iconName,
     );
-    this.sprite = this.scene.physics.add.sprite(
-      this.player.sprite!.x,
-      this.player.sprite!.y,
-      this.imageName,
-    );
-    this.sprite.setGravityY(0);
+    if (!this.player && !this.x && !this.y) {
+      throw new Error(
+        'Need to either place the weapon or attach it to a player before creating it',
+      );
+    }
+    const x = this.player?.sprite?.x ?? this.x;
+    const y = this.player?.sprite?.y ?? this.y;
+    this.sprite = this.scene.physics.add.sprite(x!, y!, this.imageName);
+    this.scene.physics.add.collider(this.sprite!, this.scene.ground!);
     this.scene.anims.create({
       key: this.fireAnimation,
       frames: this.scene.anims.generateFrameNumbers(this.imageName, {
         start: 0,
         end: 3,
       }),
-      frameRate: this.frameRate,
+      frameRate: 15,
       repeat: 0,
       yoyo: true,
     });
@@ -199,6 +224,7 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
         start: 0,
         end: 0,
       }),
+      repeat: -1,
     });
     this.scene.anims.create({
       key: this.emptyAnimation,
@@ -206,6 +232,7 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
         start: 4,
         end: 4,
       }),
+      repeat: -1,
     });
     this.ammo.forEach((bullet) => {
       bullet.create();
@@ -216,32 +243,30 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
   }
 
   public update(): void {
-    if (this.player.equippedWeapon === this) {
+    if (!this.player) {
+      this.sprite?.setVisible(true);
+      this.sprite?.setGravityY(30);
+      this.sprite?.anims.play(this.loadedAnimation);
+    } else if (this.player!.equippedWeapon === this) {
       this.sprite!.setVisible(true);
       this.sprite!.setVelocity(0, 0);
-      const xOffset = (this.frameWidth / 2)
-        + (
-          (this.player.facingRight ? 1 : -1)
-          * (this.frameWidth / 2)
-        );
-      const yOffset = this.frameHeight / 2;
-      this.sprite!.setX(this.player.sprite!.body.x + xOffset);
-      this.sprite!.setY(this.player.sprite!.body.y + yOffset);
-      if (this.canFire) {
-        if (!this.currentClip.isEmpty()) {
-          this.sprite?.anims.play(this.loadedAnimation);
-        } else {
-          this.sprite?.anims.play(this.emptyAnimation);
-        }
-      } else if (!this.currentClip.isEmpty()) {
-        this.sprite?.anims.play(this.fireAnimation);
+      const xOffset = this.player.facingRight
+        ? this.player.frameWidth + 5
+        : -5;
+      const yOffset = this.player.frameHeight / 2;
+      this.sprite!.setX(this.player!.sprite!.body.x + xOffset);
+      this.sprite!.setY(this.player!.sprite!.body.y + yOffset);
+      if (this.isReloading || this.currentClip.isEmpty()) {
+        this.sprite!.anims.play(this.emptyAnimation, true);
+      } else if (this.canFire) {
+        this.sprite!.anims.play(this.loadedAnimation, true);
       } else {
-        this.sprite?.anims.play(this.emptyAnimation);
+        this.sprite!.anims.play(this.fireAnimation, true);
       }
-      if (this.player.facingRight) {
-        this.sprite!.flipX = true;
-      } else {
+      if (this.player!.facingRight) {
         this.sprite!.flipX = false;
+      } else {
+        this.sprite!.flipX = true;
       }
     } else {
       this.sprite?.setVisible(false);

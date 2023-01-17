@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { Level } from '../scenes/Level1';
 import {
   Enemy,
+  Level,
   Projectile,
   ProjectileOnlyWeapon,
   Weapon,
@@ -99,7 +99,7 @@ export default class SmolGnome implements Enemy {
   }
 
   public attack(player: Player) {
-    if (this.isAlive) {
+    if (this.isAlive && !player.takingDamage) {
       player.takeDamage(this.attackDamage);
       const blowback = player.gravity / 2;
       player.sprite?.setVelocityY(-1 * blowback);

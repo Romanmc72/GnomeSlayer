@@ -4,18 +4,24 @@ import MenuItem from '../objects/menuItem';
 import { LEVEL_1_NAME } from './Level1';
 import PlayerError from '../errors/player';
 import MenuItemError from '../errors/menuItem';
+import { Enemy, Level } from '../types';
+import { SpriteContainer } from '../types/spriteContainer';
 
 const TITLE_NAME = 'title';
 const GUY_SIZE = 24;
 
-export default class Menu extends Phaser.Scene {
+export default class Menu extends Phaser.Scene implements Level {
   private gameOver = false;
 
   private frameRate = 20;
 
-  private player: Player;
+  public player: Player;
 
-  private ground?: Phaser.Types.Physics.Arcade.SpriteWithStaticBody;
+  public ground?: Phaser.Types.Physics.Arcade.SpriteWithStaticBody;
+
+  public gnomes: Enemy[] = [];
+
+  public objects: SpriteContainer[] = [];
 
   private start: MenuItem;
 

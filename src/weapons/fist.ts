@@ -16,6 +16,8 @@ export default class Fist implements MeleeOnlyWeapon {
 
   public canDrop = false;
 
+  public isDropped = false;
+
   public isMelee = true;
 
   public isProjectile = false;

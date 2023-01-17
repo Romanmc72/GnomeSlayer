@@ -2,16 +2,9 @@ import Phaser from 'phaser';
 import Player from '../characters/player';
 import SmolGnome from '../characters/smolGnome';
 import Pistol from '../weapons/pistol';
-import { Enemy } from '../types';
+import { Level, SpriteContainer } from '../types';
 
 export const LEVEL_1_NAME = 'Level1';
-
-export interface Level extends Phaser.Scene {
-  player: Player;
-  gnomes: Enemy[];
-  ground?: Phaser.Physics.Arcade.StaticGroup;
-  colliders: {[gnome: number]: Phaser.Physics.Arcade.Collider};
-}
 
 export default class Level1 extends Phaser.Scene implements Level {
   public player: Player;
@@ -20,13 +13,13 @@ export default class Level1 extends Phaser.Scene implements Level {
 
   public ground?: Phaser.Physics.Arcade.StaticGroup;
 
-  private gun: Pistol;
+  public objects: SpriteContainer[] = [];
 
-  public colliders: {[gnome: number]: Phaser.Physics.Arcade.Collider} = {};
+  private gun: Pistol;
 
   private groundName = 'ground';
 
-  private gnomeCount = 30;
+  private gnomeCount = 3;
 
   private controlsName = 'controls';
 
@@ -35,11 +28,12 @@ export default class Level1 extends Phaser.Scene implements Level {
     this.player = new Player({ scene: this, x: 0, y: 0 });
     this.gun = new Pistol({
       scene: this,
-      player: this.player,
       currentClip: 10,
       ammo: 100,
+      x: 300,
+      y: 0,
     });
-    this.player.weapons.push(this.gun);
+    this.player.addWeapon(this.gun);
     this.gnomes = [];
     for (let gnomeCount = 0; gnomeCount < this.gnomeCount; gnomeCount += 1) {
       this.gnomes.push(new SmolGnome(this, 200 + (10 * gnomeCount), 0, gnomeCount));
@@ -49,6 +43,7 @@ export default class Level1 extends Phaser.Scene implements Level {
   preload() {
     this.player.preload();
     this.gnomes.forEach((gnome) => gnome.preload());
+    this.objects.forEach((object) => object.preload());
     this.load.image(this.groundName, 'assets/dirt.png');
     this.load.image(this.controlsName, `assets/${this.controlsName}.png`);
   }
@@ -59,6 +54,7 @@ export default class Level1 extends Phaser.Scene implements Level {
     this.ground.create(400, 475, this.groundName);
     this.player.create();
     this.gnomes.forEach((gnome) => gnome.create());
+    this.objects.forEach((object) => object.create());
 
     if (!(this.player.sprite) || !(this.player.equippedWeapon.sprite)) {
       throw new Error('Object used before creation');
@@ -68,5 +64,6 @@ export default class Level1 extends Phaser.Scene implements Level {
   update() {
     this.player.update();
     this.gnomes.forEach((gnome) => gnome.update());
+    this.objects.forEach((object) => object.update());
   }
 }
