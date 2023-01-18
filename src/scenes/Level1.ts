@@ -19,7 +19,7 @@ export default class Level1 extends Phaser.Scene implements Level {
 
   private groundName = 'ground';
 
-  private gnomeCount = 3;
+  private gnomeCount = 36;
 
   private controlsName = 'controls';
 
