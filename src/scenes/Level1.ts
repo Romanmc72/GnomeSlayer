@@ -15,8 +15,6 @@ export default class Level1 extends Phaser.Scene implements Level {
 
   public objects: SpriteContainer[] = [];
 
-  private gun: Pistol;
-
   private groundName = 'ground';
 
   private gnomeCount = 3;
@@ -26,14 +24,14 @@ export default class Level1 extends Phaser.Scene implements Level {
   constructor() {
     super(LEVEL_1_NAME);
     this.player = new Player({ scene: this, x: 0, y: 0 });
-    this.gun = new Pistol({
+    const gun = new Pistol({
       scene: this,
       currentClip: 10,
       ammo: 100,
       x: 300,
       y: 0,
     });
-    this.player.addWeapon(this.gun);
+    this.player.addWeapon(gun);
     this.gnomes = [];
     for (let gnomeCount = 0; gnomeCount < this.gnomeCount; gnomeCount += 1) {
       this.gnomes.push(new SmolGnome(this, 200 + (10 * gnomeCount), 0, gnomeCount));

@@ -39,13 +39,13 @@ export default class HUD implements SpriteContainer {
 
   private ammoRemainingXOffset = WEAPON_ICON_DIMENSIONS.x + (WEAPON_ICON_DIMENSIONS.width / 2) + 6;
 
-  private ammoRemainingYOffset = WEAPON_ICON_DIMENSIONS.y - 60;
+  private ammoRemainingYOffset = WEAPON_ICON_DIMENSIONS.y - 40;
 
   public clipRemaining?: Phaser.GameObjects.Text;
 
   private clipRemainingXOffset = this.ammoRemainingXOffset;
 
-  private clipRemainingYOffset = this.ammoRemainingYOffset + 20;
+  private clipRemainingYOffset = this.ammoRemainingYOffset - 20;
 
   public colliders: Phaser.Physics.Arcade.Collider[] = [];
 
