@@ -42,7 +42,6 @@ export interface Projectile extends SpriteContainer {
    * The current Y coordinate of the projectile
    */
   y: number;
-  colliders: Phaser.Physics.Arcade.Collider[];
   /**
    * The function to call when the projectile hits an object
    * @param object - The object the projectile has hit

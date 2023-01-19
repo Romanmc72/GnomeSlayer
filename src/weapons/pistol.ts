@@ -171,6 +171,7 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
           this.isFiring = false;
           this.canFire = true;
           this.blast?.setVisible(false);
+          this.blast?.anims.pause(this.blast?.anims.currentAnim.frames[0]);
         }, 1000 / this.rateOfFire);
       }
     }
@@ -178,6 +179,12 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
 
   private updateCanReload(): void {
     this.canReload = this.ammo.length > 0 && this.clipSize > this.currentClip.ammo.length;
+  }
+
+  public interact(player: Player): void {
+    if (this.isDropped && player.isInteracting) {
+      player.addWeapon(this);
+    }
   }
 
   public reload(): void {
@@ -276,14 +283,23 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
     this.currentClip.ammo.forEach((bullet) => {
       bullet.create();
     });
+    this.colliders.push(this.scene.physics.add.overlap(
+      this.sprite!,
+      this.scene.player.sprite!,
+      (_o1, _o2) => {
+        this.interact(this.scene.player);
+      },
+    ));
   }
 
   public update(): void {
     if (!this.player) {
+      this.isDropped = true;
       this.sprite?.setVisible(true);
       this.sprite?.setGravityY(30);
       this.sprite?.anims.play(this.loadedAnimation);
     } else if (this.player!.equippedWeapon === this) {
+      this.isDropped = false;
       this.sprite!.setVisible(true);
       this.sprite!.setVelocity(0, 0);
       const playerFacingMultiplier = (this.player.facingRight ? 1 : -1);

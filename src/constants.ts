@@ -8,7 +8,7 @@ export const WEAPON_ICON_DIMENSIONS = {
   height: 52,
   width: 48,
   x: config.scale.width - 72,
-  y: 48,
+  y: 80,
 };
 
 export const INFINITY: Infinity = 'Inf';

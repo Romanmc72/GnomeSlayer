@@ -122,6 +122,11 @@ export default class Fist implements MeleeOnlyWeapon {
     this.displayIcon(false);
   }
 
+  public interact(player: Player): void {
+    // nonsense, just needed this method to exist
+    this.isDropped = !player.isAlive;
+  }
+
   public displayIcon(display: boolean): void {
     this.icon!.setVisible(display);
   }

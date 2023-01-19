@@ -21,7 +21,7 @@ export default class SmallBullet implements Projectile {
 
   public damage = 10;
 
-  public range = 1000;
+  public range = 300;
 
   public direction = 0;
 
@@ -49,12 +49,15 @@ export default class SmallBullet implements Projectile {
   }
 
   public launch(x: number, y: number, direction: number) {
+    this.x = x;
+    this.y = y;
+    this.direction = direction * this.velocity;
     this.sprite!.setX(x);
     this.sprite!.setY(y);
     this.sprite!.setVisible(true);
     this.isMoving = true;
     this.sprite!.setGravityY(this.gravity);
-    this.sprite!.setVelocityX(direction * this.velocity);
+    this.sprite!.setVelocityX(this.direction);
     if (this.weapon.player!.facingRight) {
       this.sprite!.flipX = false;
     } else {
@@ -110,6 +113,10 @@ export default class SmallBullet implements Projectile {
       this.sprite!.setVelocity(0, 0);
       this.sprite!.setGravity(0, 0);
       this.sprite!.setVisible(false);
+    } else {
+      this.sprite!.setVelocityY(this.gravity);
+      this.sprite!.setVelocityX(this.direction);
+      this.sprite!.setVisible(true);
     }
   }
 }

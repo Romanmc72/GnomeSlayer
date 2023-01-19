@@ -19,7 +19,7 @@ export default class Level1 extends Phaser.Scene implements Level {
 
   private groundName = 'ground';
 
-  private gnomeCount = 36;
+  private gnomeCount = 3;
 
   private controlsName = 'controls';
 
@@ -49,10 +49,12 @@ export default class Level1 extends Phaser.Scene implements Level {
   }
 
   create() {
+    this.physics.world.setBounds(0, 0, 10000, 500);
     this.physics.add.staticImage(400, 150, this.controlsName);
     this.ground = this.physics.add.staticGroup();
     this.ground.create(400, 475, this.groundName);
     this.player.create();
+    this.cameras.main.startFollow(this.player.sprite!, true, 0.04, 0.25, 0, 150);
     this.gnomes.forEach((gnome) => gnome.create());
     this.objects.forEach((object) => object.create());
 

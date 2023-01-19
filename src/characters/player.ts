@@ -112,6 +112,8 @@ export default class Player implements SpriteContainer {
 
   private isSwitchingWeapons = false;
 
+  public isInteracting = false;
+
   public colliders: Phaser.Physics.Arcade.Collider[] = [];
 
   constructor(props: PlayerProps) {
@@ -241,7 +243,7 @@ export default class Player implements SpriteContainer {
         } else if (!this.takingDamage) {
           this.sprite.setVelocityX(0);
         }
-        if (this.cursor.up.isDown && this.sprite.body.touching.down) {
+        if (this.cursor.up.isDown && this.sprite.body.onFloor()) {
           this.sprite.setVelocityY(-1 * this.gravity);
         }
         if (this.cursor.cycleWeapons.isDown && !this.isSwitchingWeapons) {
@@ -266,6 +268,11 @@ export default class Player implements SpriteContainer {
       }
       if (this.cursor.drop.isDown) {
         this.dropWeapon();
+      }
+      if (this.cursor.action.isDown) {
+        this.isInteracting = true;
+      } else {
+        this.isInteracting = false;
       }
     } else {
       this.andStayDead();

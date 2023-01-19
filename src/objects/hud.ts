@@ -34,6 +34,12 @@ export default class HUD implements SpriteContainer {
 
   public texts: Phaser.Physics.Arcade.Image[] = [];
 
+  public ammoRemaining?: Phaser.GameObjects.Text;
+
+  public clipRemaining?: Phaser.GameObjects.Text;
+
+  public colliders: Phaser.Physics.Arcade.Collider[] = [];
+
   constructor(scene: Phaser.Scene, player: Player) {
     this.scene = scene;
     this.player = player;
@@ -62,9 +68,36 @@ export default class HUD implements SpriteContainer {
     );
   }
 
+  private keepTextOnCamera(object: Phaser.GameObjects.Text) {
+    const v = object.getTopLeft();
+    const x = (
+      (v.x + this.scene.cameras.main.worldView.x)
+      * this.scene.cameras.main.zoom
+    );
+    object.setX(x);
+    const y = (
+      (v.y + this.scene.cameras.main.worldView.y)
+      * this.scene.cameras.main.zoom
+    );
+    object.setY(y);
+  }
+
+  private keepOnCamera(object: Phaser.Physics.Arcade.Image): void {
+    const x = (
+      (object.body.x + this.scene.cameras.main.worldView.x)
+      * this.scene.cameras.main.zoom
+    );
+    object.setX(x);
+    const y = (
+      (object.body.y + this.scene.cameras.main.worldView.y)
+      * this.scene.cameras.main.zoom
+    );
+    object.setY(y);
+  }
+
   public create(): void {
     this.background = this.scene.physics.add.staticImage(
-      this.x + (this.healthBarWidth / 2) - 2,
+      this.x + this.healthBarWidth - 3,
       this.y,
       this.healthBarRed,
     );
@@ -79,14 +112,31 @@ export default class HUD implements SpriteContainer {
     }
     this.texts.push(
       this.scene.physics.add.staticImage(
-        WEAPON_ICON_DIMENSIONS.x,
-        WEAPON_ICON_DIMENSIONS.y - 36,
+        WEAPON_ICON_DIMENSIONS.x + 6,
+        WEAPON_ICON_DIMENSIONS.y - 60,
         this.equippedLabel,
       ),
     );
+    this.ammoRemaining = this.scene.add.text(
+      WEAPON_ICON_DIMENSIONS.x + (WEAPON_ICON_DIMENSIONS.width / 2) + 6,
+      WEAPON_ICON_DIMENSIONS.y - 60,
+      'AMMO',
+      { font: '"Press Start 2P"' },
+    );
+    this.ammoRemaining.scrollFactorX = 0.2;
+    this.ammoRemaining.scrollFactorY = 0.2;
+    this.clipRemaining = this.scene.add.text(
+      WEAPON_ICON_DIMENSIONS.x + (WEAPON_ICON_DIMENSIONS.width / 2) + 6,
+      WEAPON_ICON_DIMENSIONS.y - 80,
+      'CLIP',
+      { font: '"Press Start 2P"' },
+    );
+    // this is dope
+    this.clipRemaining.scrollFactorX = 1;
+    this.clipRemaining.scrollFactorY = 1;
     this.texts.push(
       this.scene.physics.add.staticImage(
-        this.x + 24,
+        this.x + 50,
         this.y - 16,
         this.healthLabel,
       ),
@@ -97,13 +147,26 @@ export default class HUD implements SpriteContainer {
     if (this.isVisible) {
       const playerMaxHealth = 100;
       this.health.slice(0, this.player.health).forEach(
-        (sliver) => sliver.setVisible(true),
+        (sliver) => {
+          sliver.setVisible(true);
+          this.keepOnCamera(sliver);
+        },
       );
       this.health.slice(this.player.health, playerMaxHealth).forEach(
-        (sliver) => sliver.setVisible(false),
+        (sliver) => {
+          sliver.setVisible(false);
+          this.keepOnCamera(sliver);
+        },
       );
-      this.player.weapons.forEach((weapon) => weapon.displayIcon(false));
+      this.player.weapons.forEach((weapon) => {
+        weapon.displayIcon(false);
+        this.keepOnCamera(weapon.icon!);
+      });
       this.player.equippedWeapon.displayIcon(true);
+      this.keepOnCamera(this.background!);
+      this.texts.forEach((text) => this.keepOnCamera(text));
+      // this.keepTextOnCamera(this.ammoRemaining!);
+      // this.keepTextOnCamera(this.clipRemaining!);
     } else {
       this.background?.setVisible(false);
       this.health.forEach((sliver) => sliver.setVisible(false));

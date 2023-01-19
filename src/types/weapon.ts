@@ -73,6 +73,11 @@ export interface Weapon extends SpriteContainer {
    * Whether or not this is a projectile weapon
    */
   isProjectile: boolean;
+  /**
+   * The function that gets called when a player interacts with this object
+   * while it is no yet carried by the player
+   */
+  interact:(player: Player) => void;
 }
 
 /**
