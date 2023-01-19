@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
-import { SpriteContainer } from '../types';
-import { WEAPON_ICON_DIMENSIONS } from '../constants';
+import { ProjectileOnlyWeapon, SpriteContainer } from '../types';
+import { INFINITY, WEAPON_ICON_DIMENSIONS } from '../constants';
+import { Projectile } from '../types/projectile';
 
 export default class HUD implements SpriteContainer {
   public scene: Phaser.Scene;
@@ -36,7 +37,15 @@ export default class HUD implements SpriteContainer {
 
   public ammoRemaining?: Phaser.GameObjects.Text;
 
+  private ammoRemainingXOffset = WEAPON_ICON_DIMENSIONS.x + (WEAPON_ICON_DIMENSIONS.width / 2) + 6;
+
+  private ammoRemainingYOffset = WEAPON_ICON_DIMENSIONS.y - 60;
+
   public clipRemaining?: Phaser.GameObjects.Text;
+
+  private clipRemainingXOffset = this.ammoRemainingXOffset;
+
+  private clipRemainingYOffset = this.ammoRemainingYOffset + 20;
 
   public colliders: Phaser.Physics.Arcade.Collider[] = [];
 
@@ -68,15 +77,18 @@ export default class HUD implements SpriteContainer {
     );
   }
 
-  private keepTextOnCamera(object: Phaser.GameObjects.Text) {
-    const v = object.getTopLeft();
+  private keepTextOnCamera(
+    object: Phaser.GameObjects.Text,
+    xOffset: number,
+    yOffset: number,
+  ): void {
     const x = (
-      (v.x + this.scene.cameras.main.worldView.x)
+      (this.scene.cameras.main.worldView.x + xOffset)
       * this.scene.cameras.main.zoom
     );
     object.setX(x);
     const y = (
-      (v.y + this.scene.cameras.main.worldView.y)
+      (this.scene.cameras.main.worldView.y + yOffset)
       * this.scene.cameras.main.zoom
     );
     object.setY(y);
@@ -118,22 +130,17 @@ export default class HUD implements SpriteContainer {
       ),
     );
     this.ammoRemaining = this.scene.add.text(
-      WEAPON_ICON_DIMENSIONS.x + (WEAPON_ICON_DIMENSIONS.width / 2) + 6,
-      WEAPON_ICON_DIMENSIONS.y - 60,
+      this.ammoRemainingXOffset,
+      this.ammoRemainingYOffset,
       'AMMO',
-      { font: '"Press Start 2P"' },
+      { color: '#000000' },
     );
-    this.ammoRemaining.scrollFactorX = 0.2;
-    this.ammoRemaining.scrollFactorY = 0.2;
     this.clipRemaining = this.scene.add.text(
-      WEAPON_ICON_DIMENSIONS.x + (WEAPON_ICON_DIMENSIONS.width / 2) + 6,
-      WEAPON_ICON_DIMENSIONS.y - 80,
+      this.clipRemainingXOffset,
+      this.clipRemainingYOffset,
       'CLIP',
-      { font: '"Press Start 2P"' },
+      { color: '#000000' },
     );
-    // this is dope
-    this.clipRemaining.scrollFactorX = 1;
-    this.clipRemaining.scrollFactorY = 1;
     this.texts.push(
       this.scene.physics.add.staticImage(
         this.x + 50,
@@ -165,8 +172,27 @@ export default class HUD implements SpriteContainer {
       this.player.equippedWeapon.displayIcon(true);
       this.keepOnCamera(this.background!);
       this.texts.forEach((text) => this.keepOnCamera(text));
-      // this.keepTextOnCamera(this.ammoRemaining!);
-      // this.keepTextOnCamera(this.clipRemaining!);
+      if (this.player.equippedWeapon.ammo === INFINITY) {
+        this.ammoRemaining!.setText(INFINITY);
+      } else {
+        this.ammoRemaining!.setText(`${this.player.equippedWeapon.ammo.length}`);
+      }
+      if (this.player.equippedWeapon.isProjectile) {
+        const weapon = this.player.equippedWeapon as ProjectileOnlyWeapon<Projectile>;
+        this.clipRemaining!.setText(`${weapon.currentClip.ammo.length}`);
+      } else {
+        this.clipRemaining?.setText('');
+      }
+      this.keepTextOnCamera(
+        this.ammoRemaining!,
+        this.ammoRemainingXOffset,
+        this.ammoRemainingYOffset,
+      );
+      this.keepTextOnCamera(
+        this.clipRemaining!,
+        this.clipRemainingXOffset,
+        this.clipRemainingYOffset,
+      );
     } else {
       this.background?.setVisible(false);
       this.health.forEach((sliver) => sliver.setVisible(false));
