@@ -172,7 +172,6 @@ export default class SmolGnome implements Enemy {
   public create(): void {
     this.sprite = this.scene.physics.add.sprite(this.x, this.y, this.spriteName);
     this.sprite.setGravityY(300);
-    this.sprite.setCollideWorldBounds(true);
     this.scene.anims.create({
       key: this.turnName,
       frames: this.scene.anims.generateFrameNames(this.spriteName, {
@@ -207,71 +206,26 @@ export default class SmolGnome implements Enemy {
       frameRate: this.frameRate / 4,
       repeat: 0,
     });
-    // Not adding to the colliders array because this should always be enabled
-    this.scene.physics.add.collider(this.sprite, this.scene.ground!);
+  }
+
+  public createColliders(): void {
+    this.scene.physics.add.collider(this.sprite!, this.scene.ground!);
+    this.sprite!.setCollideWorldBounds(true);
     this.colliders.push(
       this.scene.physics.add.collider(
         this.scene.player.sprite!,
-        this.sprite,
+        this.sprite!,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (_o1, _o2) => {
           this.attack(this.scene.player);
         },
       ),
     );
-    this.scene.player.weapons.forEach((weapon) => {
-      if (weapon.isMelee) {
-        const meleeWeapon = weapon as MeleeOnlyWeapon;
-        this.colliders.push(
-          this.scene.physics.add.overlap(
-            meleeWeapon.sprite!,
-            this.sprite!,
-            (_o1, _o2) => {
-              meleeWeapon.onHit(this);
-              if (this.health <= 0) {
-                this.die();
-              }
-            },
-          ),
-        );
-      }
-      if (weapon.isProjectile) {
-        const projectileWeapon = weapon as ProjectileOnlyWeapon<Projectile>;
-        if (projectileWeapon.ammo !== INFINITY) {
-          projectileWeapon.ammo.forEach((projectile: Projectile) => {
-            const collider = this.scene.physics.add.collider(
-              projectile.sprite!,
-              this.sprite!,
-              (_o1, _o2) => {
-                projectile.hit(this);
-                if (this.health <= 0) {
-                  this.die();
-                }
-              },
-            );
-            this.colliders.push(collider);
-            projectile.colliders.push(collider);
-          });
-        }
-        projectileWeapon.currentClip.ammo.forEach((projectile) => {
-          const collider = this.scene.physics.add.collider(
-            projectile.sprite!,
-            this.sprite!,
-            (_o1, _o2) => {
-              projectile.hit(this);
-              if (this.health <= 0) {
-                this.die();
-              }
-            },
-          );
-          this.colliders.push(collider);
-          projectile.colliders.push(collider);
-        });
-      }
-    });
     this.colliders.push(
       this.scene.physics.add.collider(
         this.scene.player.sprite!,
-        this.sprite,
+        this.sprite!,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (_o1, _o2) => {
           this.attack(this.scene.player);
         },

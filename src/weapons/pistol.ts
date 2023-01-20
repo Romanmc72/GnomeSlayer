@@ -241,7 +241,7 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
     this.sprite = this.scene.physics.add.sprite(x!, y!, this.imageName);
     this.blast = this.scene.physics.add.sprite(x!, y!, this.fireBlast);
     this.blast.setVisible(false);
-    this.scene.physics.add.collider(this.sprite!, this.scene.ground!);
+    this.icon.setVisible(false);
     this.scene.anims.create({
       key: this.fireAnimation,
       frames: this.scene.anims.generateFrameNumbers(this.imageName, {
@@ -283,13 +283,24 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
     this.currentClip.ammo.forEach((bullet) => {
       bullet.create();
     });
+  }
+
+  public createColliders(): void {
+    this.scene.physics.add.collider(this.sprite!, this.scene.ground!);
     this.colliders.push(this.scene.physics.add.overlap(
       this.sprite!,
       this.scene.player.sprite!,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       (_o1, _o2) => {
         this.interact(this.scene.player);
       },
     ));
+    this.ammo.forEach((bullet) => {
+      bullet.createColliders();
+    });
+    this.currentClip.ammo.forEach((bullet) => {
+      bullet.createColliders();
+    });
   }
 
   public update(): void {

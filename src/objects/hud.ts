@@ -35,6 +35,8 @@ export default class HUD implements SpriteContainer {
 
   public texts: Phaser.Physics.Arcade.Image[] = [];
 
+  public textColor = '#000000';
+
   public ammoRemaining?: Phaser.GameObjects.Text;
 
   private ammoRemainingXOffset = WEAPON_ICON_DIMENSIONS.x + (WEAPON_ICON_DIMENSIONS.width / 2) + 6;
@@ -133,13 +135,13 @@ export default class HUD implements SpriteContainer {
       this.ammoRemainingXOffset,
       this.ammoRemainingYOffset,
       'AMMO',
-      { color: '#000000' },
+      { color: this.textColor },
     );
     this.clipRemaining = this.scene.add.text(
       this.clipRemainingXOffset,
       this.clipRemainingYOffset,
       'CLIP',
-      { color: '#000000' },
+      { color: this.textColor },
     );
     this.texts.push(
       this.scene.physics.add.staticImage(
@@ -149,6 +151,9 @@ export default class HUD implements SpriteContainer {
       ),
     );
   }
+
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
+  public createColliders(): void {}
 
   public update(): void {
     if (this.isVisible) {
@@ -198,6 +203,8 @@ export default class HUD implements SpriteContainer {
       this.health.forEach((sliver) => sliver.setVisible(false));
       this.texts.forEach((text) => text.setVisible(false));
       this.player.equippedWeapon.displayIcon(false);
+      this.ammoRemaining!.setVisible(false);
+      this.clipRemaining!.setVisible(false);
     }
   }
 }

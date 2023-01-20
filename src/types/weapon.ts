@@ -7,7 +7,7 @@ import Clip from '../weapons/clip';
 /**
  * Represents a weapon whose ammo is  either finite or infinite
  */
-export type Infinity = 'Inf';
+export type Infinity = '\u221E';
 
 /**
  * The default interface for a given type of weapon

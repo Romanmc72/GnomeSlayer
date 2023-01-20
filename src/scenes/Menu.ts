@@ -103,6 +103,7 @@ export default class Menu extends Phaser.Scene implements Level {
       throw new MenuItemError('Player not initialized!');
     }
 
+    this.player.createColliders();
     this.physics.add.collider(this.player.sprite, this.ground);
     this.physics.add.collider(
       this.player.sprite,

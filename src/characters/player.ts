@@ -167,8 +167,6 @@ export default class Player implements SpriteContainer {
     );
     this.sprite.body.setGravityY(this.gravity);
     this.sprite.setBounce(0.2);
-    this.sprite.setCollideWorldBounds(true);
-    this.scene.physics.add.collider(this.sprite, this.scene.ground!);
     this.scene.anims.create({
       key: this.runName,
       frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
@@ -224,6 +222,12 @@ export default class Player implements SpriteContainer {
     });
     this.weapons.forEach((weapon) => weapon.create());
     this.HeadsUpDisplay.create();
+  }
+
+  public createColliders(): void {
+    this.sprite!.setCollideWorldBounds(true);
+    this.scene.physics.add.collider(this.sprite!, this.scene.ground!);
+    this.weapons.forEach((weapon) => weapon.createColliders());
   }
 
   public update() {
@@ -346,6 +350,9 @@ export default class Player implements SpriteContainer {
     // eslint-disable-next-line no-param-reassign
     weapon.player = this;
     this.weapons.push(weapon);
+    this.equippedWeapon.displayIcon(false);
+    weapon.displayIcon(true);
+    this.equippedWeapon = weapon;
   }
 
   public switchWeapons(): void {

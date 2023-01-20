@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import {
   Enemy,
+  Level,
   MeleeOnlyWeapon,
 } from '../types';
 import Player from '../characters/player';
@@ -22,7 +23,7 @@ export default class Fist implements MeleeOnlyWeapon {
 
   public isProjectile = false;
 
-  public scene: Phaser.Scene;
+  public scene: Level;
 
   public player: Player;
 
@@ -64,7 +65,7 @@ export default class Fist implements MeleeOnlyWeapon {
 
   public colliders: Phaser.Physics.Arcade.Collider[] = [];
 
-  constructor(scene: Phaser.Scene, player: Player) {
+  constructor(scene: Level, player: Player) {
     this.scene = scene;
     this.player = player;
   }
@@ -120,6 +121,24 @@ export default class Fist implements MeleeOnlyWeapon {
       this.iconName,
     );
     this.displayIcon(false);
+  }
+
+  public createColliders(): void {
+    this.scene.gnomes.forEach((gnome) => {
+      const collider = this.scene.physics.add.overlap(
+        gnome.sprite!,
+        this.sprite!,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        (_o1, _o2) => {
+          this.onHit(gnome);
+          if (gnome.health <= 0) {
+            gnome.die();
+          }
+        },
+      );
+      this.colliders.push(collider);
+      gnome.colliders.push(collider);
+    });
   }
 
   public interact(player: Player): void {

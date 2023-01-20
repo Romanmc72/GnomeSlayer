@@ -18,6 +18,13 @@ export interface SpriteContainer {
    */
   colliders: Phaser.Physics.Arcade.Collider[];
   /**
+   * Creates the colliders, intended to separate the business of creating
+   * sprites from that of creating the collisions between them, that way we
+   * don't get into a circular dependency issue between the two attempting to
+   * create both simultaneously
+   */
+  createColliders: () => void;
+  /**
    * To be run during the preload phase of the scene.
    * @returns Nothing. Uses the scene to preload the sprite sheet
    */

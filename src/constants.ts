@@ -11,4 +11,5 @@ export const WEAPON_ICON_DIMENSIONS = {
   y: 80,
 };
 
-export const INFINITY: Infinity = 'Inf';
+// The infinity symbol in unicode
+export const INFINITY: Infinity = '\u221E';

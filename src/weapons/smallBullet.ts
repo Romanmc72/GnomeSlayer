@@ -76,11 +76,13 @@ export default class SmallBullet implements Projectile {
   }
 
   public stop(): void {
-    this.isMoving = false;
-    this.colliders.forEach((collider) => {
-      // eslint-disable-next-line no-param-reassign
-      collider.active = false;
-    });
+    if (this.isMoving) {
+      this.isMoving = false;
+      this.colliders.forEach((collider) => {
+        // eslint-disable-next-line no-param-reassign
+        collider.active = false;
+      });
+    }
   }
 
   public preload(): void {
@@ -97,15 +99,32 @@ export default class SmallBullet implements Projectile {
     this.sprite.setVelocity(0, 0);
     this.isMoving = false;
     this.sprite.setVisible(false);
+  }
+
+  public createColliders(): void {
     this.scene.physics.add.collider(
       this.sprite!,
       this.scene.ground!,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       (_o1, _o2) => {
         this.stop();
-        // this.sprite?.setVelocityX(0);
       },
     );
+    this.scene.gnomes.forEach((gnome) => {
+      const collider = this.scene.physics.add.collider(
+        gnome.sprite!,
+        this.sprite!,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        (_o1, _o2) => {
+          this.hit(gnome);
+          if (gnome.health <= 0) {
+            gnome.die();
+          }
+        },
+      );
+      this.colliders.push(collider);
+      gnome.colliders.push(collider);
+    });
   }
 
   public update(): void {
