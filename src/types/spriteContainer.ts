@@ -5,6 +5,11 @@ import Phaser from 'phaser';
  */
 export interface SpriteContainer {
   /**
+   * The depth of the sprite on screen, defaults are
+   * that sprites have no depth so this should fix that
+   */
+  depth: number;
+  /**
    * The scene that the sprite is a part of
    */
   scene: Phaser.Scene;

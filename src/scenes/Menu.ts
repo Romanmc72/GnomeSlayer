@@ -105,18 +105,8 @@ export default class Menu extends Phaser.Scene implements Level {
 
     this.player.createColliders();
     this.physics.add.collider(this.player.sprite, this.ground);
-    this.physics.add.collider(
-      this.player.sprite,
-      this.start.sprite,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      (_o1, _o2) => this.start.onCollide(),
-    );
-    this.physics.add.collider(
-      this.player.sprite,
-      this.quit.sprite,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      (_o1, _o2) => this.quit.onCollide(),
-    );
+    this.start.createColliders();
+    this.quit.createColliders();
   }
 
   /**

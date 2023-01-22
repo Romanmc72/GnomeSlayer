@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
 import { Level, ProjectileOnlyWeapon } from '../types';
-import { WEAPON_ICON_DIMENSIONS } from '../constants';
+import { DEFAULT_DEPTH, WEAPON_ICON_DIMENSIONS } from '../constants';
 import SmallBullet, { SmallBulletProps } from './smallBullet';
 import Clip from './clip';
 
@@ -49,6 +49,8 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
   public x?: number;
 
   public y?: number;
+
+  public depth = DEFAULT_DEPTH;
 
   public ammo: SmallBullet[];
 
@@ -231,6 +233,7 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
       WEAPON_ICON_DIMENSIONS.y,
       this.iconName,
     );
+    this.icon.depth = WEAPON_ICON_DIMENSIONS.depth;
     if (!this.player && !this.x && !this.y) {
       throw new Error(
         'Need to either place the weapon or attach it to a player before creating it',
@@ -239,7 +242,9 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
     const x = this.player?.sprite?.x ?? this.x;
     const y = this.player?.sprite?.y ?? this.y;
     this.sprite = this.scene.physics.add.sprite(x!, y!, this.imageName);
+    this.sprite.depth = this.depth;
     this.blast = this.scene.physics.add.sprite(x!, y!, this.fireBlast);
+    this.blast.depth = this.depth;
     this.blast.setVisible(false);
     this.icon.setVisible(false);
     this.scene.anims.create({

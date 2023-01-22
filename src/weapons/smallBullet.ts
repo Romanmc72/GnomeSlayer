@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
+import { DEFAULT_DEPTH } from '../constants';
 import {
   Enemy,
   Level,
@@ -14,6 +15,8 @@ export interface SmallBulletProps {
 
 export default class SmallBullet implements Projectile {
   public scene: Level;
+
+  public depth = DEFAULT_DEPTH;
 
   public weapon: Weapon;
 
@@ -95,6 +98,7 @@ export default class SmallBullet implements Projectile {
       this.origin_y,
       this.imageName,
     );
+    this.sprite.depth = this.depth;
     this.sprite.setGravityY(0);
     this.sprite.setVelocity(0, 0);
     this.isMoving = false;

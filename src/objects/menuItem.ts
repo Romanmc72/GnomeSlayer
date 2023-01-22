@@ -1,13 +1,17 @@
 import Phaser from 'phaser';
 import MenuItemError from '../errors/menuItem';
 import { SpriteContainer } from '../types/spriteContainer';
+import { DEFAULT_DEPTH } from '../constants';
+import { Level } from '../types';
 
 export default class MenuItem implements SpriteContainer {
-  public scene: Phaser.Scene;
+  public scene: Level;
 
   private x: number;
 
   private y: number;
+
+  public depth = DEFAULT_DEPTH + 2;
 
   public spriteName: string;
 
@@ -27,8 +31,10 @@ export default class MenuItem implements SpriteContainer {
 
   public select: () => void;
 
+  public colliders: Phaser.Physics.Arcade.Collider[] = [];
+
   constructor(
-    scene: Phaser.Scene,
+    scene: Level,
     x: number,
     y: number,
     spriteName: string,
@@ -59,6 +65,7 @@ export default class MenuItem implements SpriteContainer {
 
   public create() {
     this.sprite = this.scene.physics.add.staticSprite(this.x, this.y, this.spriteName);
+    this.sprite.depth = this.depth;
     this.scene.anims.create({
       key: this.selectedName,
       frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
@@ -75,6 +82,15 @@ export default class MenuItem implements SpriteContainer {
       }),
       repeat: 0,
     });
+  }
+
+  createColliders(): void {
+    this.scene.physics.add.collider(
+      this.scene.player.sprite!,
+      this.sprite!,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      (_o1, _o2) => this.onCollide(),
+    );
   }
 
   public update() {

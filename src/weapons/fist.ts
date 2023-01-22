@@ -6,12 +6,14 @@ import {
 } from '../types';
 import Player from '../characters/player';
 import PlayerError from '../errors/player';
-import { INFINITY, WEAPON_ICON_DIMENSIONS } from '../constants';
+import { DEFAULT_DEPTH, INFINITY, WEAPON_ICON_DIMENSIONS } from '../constants';
 
 export default class Fist implements MeleeOnlyWeapon {
   public ammo = INFINITY;
 
   public sprite?: Phaser.Physics.Arcade.Sprite;
+
+  public depth = DEFAULT_DEPTH;
 
   public canFire = true;
 
@@ -95,8 +97,10 @@ export default class Fist implements MeleeOnlyWeapon {
       this.player.sprite.y,
       this.spriteName,
     );
+    this.sprite.depth = this.depth;
     this.sprite.setGravityY(0);
     this.sprite.setVisible(false);
+    this.sprite.depth = this.depth;
     this.scene.anims.create({
       key: this.fireAnimationRight,
       frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
@@ -120,6 +124,7 @@ export default class Fist implements MeleeOnlyWeapon {
       WEAPON_ICON_DIMENSIONS.y,
       this.iconName,
     );
+    this.icon.depth = WEAPON_ICON_DIMENSIONS.depth;
     this.displayIcon(false);
   }
 

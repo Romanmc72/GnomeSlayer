@@ -1,11 +1,13 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
 import { ProjectileOnlyWeapon, SpriteContainer } from '../types';
-import { INFINITY, WEAPON_ICON_DIMENSIONS } from '../constants';
+import { DEFAULT_DEPTH, INFINITY, WEAPON_ICON_DIMENSIONS } from '../constants';
 import { Projectile } from '../types/projectile';
 
 export default class HUD implements SpriteContainer {
   public scene: Phaser.Scene;
+
+  public depth = DEFAULT_DEPTH + 100;
 
   private player: Player;
 
@@ -115,14 +117,15 @@ export default class HUD implements SpriteContainer {
       this.y,
       this.healthBarRed,
     );
+    this.background.depth = this.depth;
     for (let healthSliver = 0; healthSliver < 100; healthSliver += 1) {
-      this.health.push(
-        this.scene.physics.add.staticImage(
-          this.x + (this.healthSliverWidth * healthSliver),
-          this.y,
-          this.healthBarGreen,
-        ),
+      const sliver = this.scene.physics.add.staticImage(
+        this.x + (this.healthSliverWidth * healthSliver),
+        this.y,
+        this.healthBarGreen,
       );
+      sliver.depth = this.depth + 1;
+      this.health.push(sliver);
     }
     this.texts.push(
       this.scene.physics.add.staticImage(
@@ -137,19 +140,21 @@ export default class HUD implements SpriteContainer {
       'AMMO',
       { color: this.textColor },
     );
+    this.ammoRemaining.depth = this.depth;
     this.clipRemaining = this.scene.add.text(
       this.clipRemainingXOffset,
       this.clipRemainingYOffset,
       'CLIP',
       { color: this.textColor },
     );
-    this.texts.push(
-      this.scene.physics.add.staticImage(
-        this.x + 50,
-        this.y - 16,
-        this.healthLabel,
-      ),
+    this.clipRemaining.depth = this.depth;
+    const healthLabel = this.scene.physics.add.staticImage(
+      this.x + 50,
+      this.y - 16,
+      this.healthLabel,
     );
+    healthLabel.depth = this.depth;
+    this.texts.push(healthLabel);
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function

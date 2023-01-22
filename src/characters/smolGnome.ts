@@ -8,10 +8,12 @@ import {
 } from '../types';
 import Player from './player';
 import { MeleeOnlyWeapon } from '../types/weapon';
-import { INFINITY } from '../constants';
+import { INFINITY, DEFAULT_DEPTH } from '../constants';
 
 export default class SmolGnome implements Enemy {
   public scene: Level;
+
+  public depth = DEFAULT_DEPTH - 1;
 
   public health = 30;
 
@@ -171,6 +173,7 @@ export default class SmolGnome implements Enemy {
 
   public create(): void {
     this.sprite = this.scene.physics.add.sprite(this.x, this.y, this.spriteName);
+    this.sprite.depth = this.depth;
     this.sprite.setGravityY(300);
     this.scene.anims.create({
       key: this.turnName,

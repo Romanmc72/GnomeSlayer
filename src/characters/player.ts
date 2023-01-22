@@ -1,8 +1,14 @@
 import Phaser from 'phaser';
 import PlayerError from '../errors/player';
-import { Level, SpriteContainer, Weapon } from '../types';
+import {
+  Key,
+  Level,
+  SpriteContainer,
+  Weapon,
+} from '../types';
 import Fist from '../weapons/fist';
 import HUD from '../objects/hud';
+import { DEFAULT_DEPTH } from '../constants';
 
 const GUY_NAME = 'dumbguy';
 
@@ -47,6 +53,8 @@ export default class Player implements SpriteContainer {
   private x: number;
 
   private y: number;
+
+  public depth = DEFAULT_DEPTH + 100;
 
   public spriteName: string;
 
@@ -99,6 +107,8 @@ export default class Player implements SpriteContainer {
   public cursor?: KeyboardInput;
 
   public weapons: Weapon[] = [];
+
+  public keys: Key[] = [];
 
   public equippedWeapon: Weapon;
 
@@ -165,6 +175,7 @@ export default class Player implements SpriteContainer {
       this.y,
       this.spriteName,
     );
+    this.sprite.depth = this.depth;
     this.sprite.body.setGravityY(this.gravity);
     this.sprite.setBounce(0.2);
     this.scene.anims.create({

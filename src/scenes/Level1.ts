@@ -3,6 +3,8 @@ import Player from '../characters/player';
 import SmolGnome from '../characters/smolGnome';
 import Pistol from '../weapons/pistol';
 import { Level, SpriteContainer } from '../types';
+import RedDoor from '../objects/redDoor';
+import { LEVEL_2_NAME } from './Level2';
 
 export const LEVEL_1_NAME = 'Level1';
 
@@ -15,11 +17,15 @@ export default class Level1 extends Phaser.Scene implements Level {
 
   public objects: SpriteContainer[] = [];
 
+  private gameWidth = 1000;
+
+  private gameHeight = 500;
+
   private groundName = 'ground';
 
   private wallName = 'wall';
 
-  private gnomeCount = 10;
+  private gnomeCount = 1;
 
   private controlsName = 'controls';
 
@@ -32,6 +38,12 @@ export default class Level1 extends Phaser.Scene implements Level {
       ammo: 100,
       x: 300,
       y: 0,
+    }));
+    this.objects.push(new RedDoor({
+      scene: this,
+      nextSceneName: LEVEL_2_NAME,
+      x: this.gameWidth - 400,
+      y: this.gameHeight - 100,
     }));
     this.gnomes = [];
     for (let gnomeCount = 0; gnomeCount < this.gnomeCount; gnomeCount += 1) {
@@ -49,24 +61,22 @@ export default class Level1 extends Phaser.Scene implements Level {
   }
 
   create() {
-    const gameWidth = 3000;
-    const gameHeight = 500;
-    this.physics.world.setBounds(0, 0, gameWidth, gameHeight);
+    this.physics.world.setBounds(0, 0, this.gameWidth, this.gameHeight);
     this.physics.add.staticImage(400, 150, this.controlsName);
     this.ground = this.physics.add.staticGroup();
     const groundWidth = 800;
     const groundStart = -400;
     for (
       let chunk = 0;
-      (((chunk - 1) * groundWidth) + groundStart) < gameWidth;
+      (((chunk - 1) * groundWidth) + groundStart) < this.gameWidth;
       chunk += 1
     ) {
       this.ground.create(-400 + (chunk * groundWidth), 475, this.groundName);
     }
     this.ground.create(-30, 250, this.wallName);
-    this.ground.create(gameWidth - 30, 250, this.wallName);
+    this.ground.create(this.gameWidth - 30, 250, this.wallName);
     this.player.create();
-    this.cameras.main.setBounds(0, 0, gameWidth, gameHeight);
+    this.cameras.main.setBounds(0, 0, this.gameWidth, this.gameHeight);
     this.cameras.main.startFollow(this.player.sprite!, false, 0.02, 0.25);
     this.gnomes.forEach((gnome) => gnome.create());
     this.objects.forEach((object) => object.create());
