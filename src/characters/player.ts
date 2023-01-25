@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import PlayerError from '../errors/player';
 import {
-  Key,
+  IKey,
   Level,
   SpriteContainer,
   Weapon,
@@ -108,7 +108,7 @@ export default class Player implements SpriteContainer {
 
   public weapons: Weapon[] = [];
 
-  public keys: Key[] = [];
+  public keys: IKey[] = [];
 
   public equippedWeapon: Weapon;
 
@@ -289,6 +289,7 @@ export default class Player implements SpriteContainer {
       } else {
         this.isInteracting = false;
       }
+      this.equippedWeapon.sprite!.depth = this.sprite.depth;
     } else {
       this.andStayDead();
     }
@@ -392,5 +393,10 @@ export default class Player implements SpriteContainer {
         }
       });
     }
+  }
+
+  public addKey(key: IKey): void {
+    this.keys.push(key);
+    key.setCarrier(this);
   }
 }

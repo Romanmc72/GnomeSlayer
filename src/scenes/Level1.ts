@@ -5,6 +5,7 @@ import Pistol from '../weapons/pistol';
 import { Level, SpriteContainer } from '../types';
 import RedDoor from '../objects/redDoor';
 import { LEVEL_2_NAME } from './Level2';
+import SmallKey from '../objects/smallKey';
 
 export const LEVEL_1_NAME = 'Level1';
 
@@ -49,6 +50,7 @@ export default class Level1 extends Phaser.Scene implements Level {
     for (let gnomeCount = 0; gnomeCount < this.gnomeCount; gnomeCount += 1) {
       this.gnomes.push(new SmolGnome(this, 200 + (10 * gnomeCount), 0, gnomeCount));
     }
+    this.objects.push(new SmallKey({ scene: this, carrier: this.gnomes[0] }));
   }
 
   preload() {
