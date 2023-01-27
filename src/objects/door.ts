@@ -1,7 +1,7 @@
 import Player from '../characters/player';
 import { DEFAULT_DEPTH } from '../constants';
 import imagesLocationFor from '../helpers';
-import { IKey, Level, Lock } from '../types';
+import { IKey, Level, ILock } from '../types';
 import { SpriteContainer } from '../types/spriteContainer';
 
 export enum DoorState {
@@ -75,7 +75,7 @@ export interface DoorProps {
   /**
    * The type of lock on the door (if there is one)
    */
-  lock?: Lock<IKey>;
+  lock?: ILock<IKey>;
   /**
    * How long to wait before becoming interact-able between state changes
    */
@@ -122,7 +122,7 @@ export default class Door implements SpriteContainer {
 
   private closedAnimation: string;
 
-  private lock?: Lock<IKey>;
+  private lock?: ILock<IKey>;
 
   private lockedFrame?: number;
 

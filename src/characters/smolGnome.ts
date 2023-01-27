@@ -2,13 +2,10 @@ import Phaser from 'phaser';
 import {
   Enemy,
   Level,
-  Projectile,
-  ProjectileOnlyWeapon,
   Weapon,
 } from '../types';
 import Player from './player';
-import { MeleeOnlyWeapon } from '../types/weapon';
-import { INFINITY, DEFAULT_DEPTH } from '../constants';
+import { DEFAULT_DEPTH } from '../constants';
 
 export default class SmolGnome implements Enemy {
   public scene: Level;

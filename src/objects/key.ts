@@ -3,7 +3,7 @@ import {
   KeyCarrier,
   KeyType,
   Level,
-  Lock,
+  ILock,
 } from '../types';
 import { DEFAULT_DEPTH } from '../constants';
 import imageLocationFor from '../helpers';
@@ -178,7 +178,7 @@ export default class Key implements IKey {
     this.carrier = carrier;
   }
 
-  useKey(lock: Lock<this>) {
+  useKey(lock: ILock<this>) {
     if (lock.canUnlock(this)) {
       lock.unlock(this);
       this.isUsed = true;
@@ -207,12 +207,10 @@ export default class Key implements IKey {
       this.disableColliders();
     } else if (!this.carrier) {
       this.sprite!.anims.play(this.spinningAnimation, true);
-      console.log(this.sprite!.anims.currentFrame.index);
       if (
         this.sprite!.anims.currentFrame.index === this.spinningFrames
         && this.lastFrame === this.spinningFrames - 1
       ) {
-        console.log('flipped!');
         this.sprite!.flipX = !this.sprite!.flipX;
       }
       this.lastFrame = this.sprite!.anims.currentFrame.index;
