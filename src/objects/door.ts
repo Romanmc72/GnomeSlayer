@@ -1,8 +1,14 @@
 import Player from '../characters/player';
 import { DEFAULT_DEPTH } from '../constants';
 import imagesLocationFor from '../helpers';
-import { IKey, Level, ILock } from '../types';
-import { SpriteContainer } from '../types/spriteContainer';
+import {
+  KeyType,
+  Level,
+  ILock,
+  SpriteContainer,
+  SpriteContainerProps,
+} from '../types';
+import Lock from './lock';
 
 export enum DoorState {
   OPEN,
@@ -16,11 +22,7 @@ export enum DoorState {
  * that if there is a locked frame, the frames between the door as locked and
  * the door as closed are the animation of the door unlocking.
  */
-export interface DoorProps {
-  /**
-   * The scene inside of which this door exists
-   */
-  scene: Level;
+export interface DoorProps extends SpriteContainerProps {
   /**
    * The next scene that this door leads to
    */
@@ -38,26 +40,6 @@ export interface DoorProps {
    */
   state: DoorState;
   /**
-   * The location of the spritesheet
-   */
-  spriteSheet: string;
-  /**
-   * The name of this particular door's animation key
-   */
-  name: string;
-  /**
-   * The frame width
-   */
-  frameWidth: number;
-  /**
-   * The frame height
-   */
-  frameHeight: number;
-  /**
-   * The rate at which the animation frames will play
-   */
-  frameRate: number;
-  /**
    * The number corresponding to the frame representing the door as
    * DoorState.OPEN
    */
@@ -68,14 +50,9 @@ export interface DoorProps {
    */
   closedFrame: number;
   /**
-   * The number corresponding to the frame representing the door as
-   * DoorState.LOCKED
-   */
-  lockedFrame?: number;
-  /**
    * The type of lock on the door (if there is one)
    */
-  lock?: ILock<IKey>;
+  lock?: ILock<KeyType>;
   /**
    * How long to wait before becoming interact-able between state changes
    */
@@ -102,7 +79,7 @@ export default class Door implements SpriteContainer {
 
   public state: DoorState;
 
-  private spriteSheet: string;
+  private spritesheet: string;
 
   private name: string;
 
@@ -122,13 +99,9 @@ export default class Door implements SpriteContainer {
 
   private closedAnimation: string;
 
-  private lock?: ILock<IKey>;
+  private lock?: ILock<KeyType>;
 
   private lockedFrame?: number;
-
-  private lockedAnimation: string;
-
-  private unlockingAnimation: string;
 
   private stateChangeTimer: number;
 
@@ -140,7 +113,7 @@ export default class Door implements SpriteContainer {
     this.x = props.x;
     this.y = props.y;
     this.state = props.state;
-    this.spriteSheet = props.spriteSheet;
+    this.spritesheet = props.spritesheet;
     this.name = props.name;
     this.frameWidth = props.frameWidth;
     this.frameHeight = props.frameHeight;
@@ -148,26 +121,23 @@ export default class Door implements SpriteContainer {
     this.openFrame = props.openFrame;
     this.closedFrame = props.closedFrame;
     this.lock = props.lock;
-    this.lockedFrame = props.lockedFrame;
     this.openAnimation = `${this.name}Open`;
     this.openingAnimation = `${this.name}Opening`;
     this.closedAnimation = `${this.name}Closed`;
-    this.lockedAnimation = `${this.name}Locked`;
-    this.unlockingAnimation = `${this.name}Unlocking`;
     this.stateChangeTimer = props.stateChangeTimer;
   }
 
   preload(): void {
     this.scene.load.spritesheet(
       this.name,
-      imagesLocationFor(this.spriteSheet),
+      imagesLocationFor(this.spritesheet),
       { frameWidth: this.frameWidth, frameHeight: this.frameHeight },
     );
   }
 
   create(): void {
     this.sprite = this.scene.physics.add.sprite(this.x, this.y, this.name);
-    this.sprite.depth = this.depth;
+    this.sprite.setDepth(this.depth);
     this.scene.anims.create({
       key: this.openAnimation,
       frames: this.scene.anims.generateFrameNumbers(this.name, {
@@ -191,24 +161,6 @@ export default class Door implements SpriteContainer {
       frameRate: this.frameRate,
       repeat: 0,
     });
-    if (this.lockedFrame) {
-      this.scene.anims.create({
-        key: this.lockedAnimation,
-        frames: this.scene.anims.generateFrameNumbers(this.name, {
-          start: this.lockedFrame,
-          end: this.lockedFrame,
-        }),
-      });
-      this.scene.anims.create({
-        key: this.unlockingAnimation,
-        frames: this.scene.anims.generateFrameNumbers(this.name, {
-          start: this.lockedFrame,
-          end: this.closedFrame,
-        }),
-        frameRate: this.frameRate,
-        repeat: 0,
-      });
-    }
   }
 
   createColliders(): void {
@@ -233,9 +185,6 @@ export default class Door implements SpriteContainer {
         case DoorState.OPEN:
           this.sprite!.play(this.openAnimation, true);
           break;
-        case DoorState.LOCKED:
-          this.sprite!.play(this.lockedAnimation, true);
-          break;
         default:
           this.sprite!.play(this.closedAnimation, true);
       }
@@ -245,7 +194,7 @@ export default class Door implements SpriteContainer {
   interact(player: Player): void {
     if (!this.isChangingState) {
       if (this.state === DoorState.LOCKED && this.canUnlock(player)) {
-        this.unlockDoor();
+        this.unlockDoor(player);
       } else if (this.state === DoorState.CLOSED) {
         this.openDoor();
         setTimeout(() => { this.closeDoor(); }, 6000);
@@ -253,20 +202,20 @@ export default class Door implements SpriteContainer {
         this.scene.scene.start(this.nextSceneName);
       }
     }
+    console.log(this.state);
   }
 
   hide(hidden: boolean): void {
     this.sprite?.setVisible(hidden);
   }
 
-  // TODO : Deal with duplicate locking behavior
   canUnlock(player: Player): boolean {
-    for (let keyNum = 0; keyNum < player.keys.length; keyNum += 1) {
-      if (this.lock?.canUnlock(player.keys[keyNum])) {
-        return true;
-      }
-    }
-    return false;
+    return (
+      this.state === DoorState.LOCKED
+      && this.lock !== undefined
+      && this.lock!.isLocked
+      && player.keys[this.lock.type].length > 0
+    );
   }
 
   private resetIsChangingState(): void {
@@ -293,25 +242,30 @@ export default class Door implements SpriteContainer {
   }
 
   lockDoor(): void {
-    if (this.lockedFrame) {
+    if (this.lock) {
       if (this.state === DoorState.OPEN) {
         this.closeDoor();
         this.lockDoor();
       } else if (this.state === DoorState.CLOSED) {
-        this.sprite!.playReverse(this.unlockingAnimation, true);
-        this.sprite!.playAfterRepeat(this.lockedAnimation);
         this.state = DoorState.LOCKED;
+        this.lock!.lock();
         this.resetIsChangingState();
       }
+    } else {
+      this.closeDoor();
     }
   }
 
-  unlockDoor(): void {
-    if (this.lockedFrame && this.state === DoorState.LOCKED) {
-      this.sprite!.play(this.unlockingAnimation, true);
-      this.sprite!.playAfterRepeat(this.closedAnimation);
+  unlockDoor(player: Player): void {
+    if (this.state === DoorState.LOCKED) {
+      this.lock!.unlock(player);
       this.state = DoorState.CLOSED;
       this.resetIsChangingState();
     }
+  }
+
+  setLock(lock: Lock<KeyType>) {
+    this.lock = lock;
+    this.lockDoor();
   }
 }

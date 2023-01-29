@@ -1,4 +1,4 @@
-import { Level } from '../types';
+import { KeyType, Level, ILock } from '../types';
 import Door, { DoorState } from './door';
 
 export interface RedDoorProps {
@@ -6,6 +6,7 @@ export interface RedDoorProps {
   nextSceneName: string;
   x: number;
   y: number;
+  lock?: ILock<KeyType>;
 }
 
 export default class RedDoor extends Door {
@@ -13,13 +14,13 @@ export default class RedDoor extends Door {
     super({
       ...props,
       name: 'door',
-      spriteSheet: 'door',
+      spritesheet: 'door',
       closedFrame: 0,
       openFrame: 6,
       frameWidth: 40,
       frameHeight: 40,
       frameRate: 3,
-      state: DoorState.CLOSED,
+      state: props.lock !== undefined ? DoorState.LOCKED : DoorState.CLOSED,
       stateChangeTimer: 2000,
     });
   }

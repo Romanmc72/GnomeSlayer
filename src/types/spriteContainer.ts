@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Level } from './level';
 
 /**
  * The interface for an object that contains a sprite
@@ -12,7 +13,7 @@ export interface SpriteContainer {
   /**
    * The scene that the sprite is a part of
    */
-  scene: Phaser.Scene;
+  scene: Level;
   /**
    * The sprite itself. Defaults to undefined as it cannot be initialized
    * until the SpriteContainer.create() method is called.
@@ -45,4 +46,35 @@ export interface SpriteContainer {
    * @returns Nothing.
    */
   update: () => void;
+}
+
+/**
+ * The props you will definitely need if you are initializing a new sprite
+ */
+export interface SpriteContainerProps {
+  /**
+   * The scene the sprite will live in
+   */
+  scene: Level;
+  /**
+   * The frame rate for the sprite's animations
+   */
+  frameRate: number;
+  /**
+   * The height of one frame from the spritesheet
+   */
+  frameHeight: number;
+  /**
+   * The width of one frame from the spritesheet
+   */
+  frameWidth: number;
+  /**
+   * The name of this particular sprite
+   */
+  name: string;
+  /**
+   * The name of the spritesheet in the public/assets/ folder
+   * without the file extension or the path
+   */
+  spritesheet: string;
 }

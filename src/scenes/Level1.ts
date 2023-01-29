@@ -6,8 +6,9 @@ import { Level, SpriteContainer } from '../types';
 import RedDoor from '../objects/redDoor';
 import { LEVEL_2_NAME } from './Level2';
 import SmallKey from '../objects/smallKey';
+import SmallLock from '../objects/smallLock';
 
-export const LEVEL_1_NAME = 'Level1';
+export const LEVEL_1_NAME = 'No Way Gnome';
 
 export default class Level1 extends Phaser.Scene implements Level {
   public player: Player;
@@ -40,12 +41,15 @@ export default class Level1 extends Phaser.Scene implements Level {
       x: 300,
       y: 0,
     }));
-    this.objects.push(new RedDoor({
+    const door = new RedDoor({
       scene: this,
       nextSceneName: LEVEL_2_NAME,
       x: this.gameWidth - 400,
       y: this.gameHeight - 100,
-    }));
+    });
+    const lock = new SmallLock({ lockedObject: door });
+    this.objects.push(door);
+    this.objects.push(lock);
     this.gnomes = [];
     for (let gnomeCount = 0; gnomeCount < this.gnomeCount; gnomeCount += 1) {
       this.gnomes.push(new SmolGnome(this, 200 + (10 * gnomeCount), 0, gnomeCount));

@@ -4,6 +4,7 @@ import {
   KeyType,
   Level,
   ILock,
+  SpriteContainerProps,
 } from '../types';
 import { DEFAULT_DEPTH } from '../constants';
 import imageLocationFor from '../helpers';
@@ -11,11 +12,7 @@ import imageLocationFor from '../helpers';
 /**
  * The properties required to instantiate a key
  */
-export interface KeyProps {
-  /**
-   * The level in which this key exists
-   */
-  scene: Level;
+export interface KeyProps extends SpriteContainerProps {
   /**
    * The type of key belonging to a certain type of lock
    */
@@ -38,14 +35,6 @@ export interface KeyProps {
    */
   carrier?: KeyCarrier;
   /**
-   * The name of the spritesheet for this key.
-   */
-  spritesheet: string;
-  /**
-   * The name of the key object.
-   */
-  name: string;
-  /**
    * The frame number for the key when it is not spinning
    */
   stillFrame: number;
@@ -53,18 +42,6 @@ export interface KeyProps {
    * The total number of frames in the spinning animation, starting at the still frame
    */
   spinningFrames: number;
-  /**
-   * The width of the frame
-   */
-  frameWidth: number;
-  /**
-   * The height of the frame
-   */
-  frameHeight: number;
-  /**
-   * The rate at which animations will play
-   */
-  frameRate: number;
 }
 
 export default class Key implements IKey {

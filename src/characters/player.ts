@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import PlayerError from '../errors/player';
 import {
   IKey,
+  KeyType,
   Level,
   SpriteContainer,
   Weapon,
@@ -9,8 +10,13 @@ import {
 import Fist from '../weapons/fist';
 import HUD from '../objects/hud';
 import { DEFAULT_DEPTH } from '../constants';
+import Key from '../objects/key';
 
 const GUY_NAME = 'dumbguy';
+
+export type KeyRing = {
+  [keyType in KeyType]: Key[];
+}
 
 /**
  * The optional and require properties to initialize a player
@@ -108,7 +114,11 @@ export default class Player implements SpriteContainer {
 
   public weapons: Weapon[] = [];
 
-  public keys: IKey[] = [];
+  public keys: KeyRing = {
+    [KeyType.SMALL]: [],
+    [KeyType.MEDIUM]: [],
+    [KeyType.LARGE]: [],
+  };
 
   public equippedWeapon: Weapon;
 
@@ -175,7 +185,7 @@ export default class Player implements SpriteContainer {
       this.y,
       this.spriteName,
     );
-    this.sprite.depth = this.depth;
+    this.sprite.setDepth(this.depth);
     this.sprite.body.setGravityY(this.gravity);
     this.sprite.setBounce(0.2);
     this.scene.anims.create({
@@ -289,7 +299,7 @@ export default class Player implements SpriteContainer {
       } else {
         this.isInteracting = false;
       }
-      this.equippedWeapon.sprite!.depth = this.sprite.depth;
+      this.equippedWeapon.sprite!.setDepth(this.sprite.depth);
     } else {
       this.andStayDead();
     }
@@ -300,7 +310,6 @@ export default class Player implements SpriteContainer {
     }
     this.weapons.forEach((weapon) => weapon.update());
     this.HeadsUpDisplay.update();
-    this.equippedWeapon.sprite!.depth = -100;
   }
 
   public takeDamage(damage: number): void {
@@ -361,6 +370,7 @@ export default class Player implements SpriteContainer {
   public addWeapon(weapon: Weapon): void {
     // eslint-disable-next-line no-param-reassign
     weapon.player = this;
+    weapon.sprite!.setDepth(this.depth);
     this.weapons.push(weapon);
     this.equippedWeapon.displayIcon(false);
     weapon.displayIcon(true);
@@ -395,8 +405,8 @@ export default class Player implements SpriteContainer {
     }
   }
 
-  public addKey(key: IKey): void {
-    this.keys.push(key);
+  public addKey(key: Key): void {
+    this.keys[key.type].push(key);
     key.setCarrier(this);
   }
 }
