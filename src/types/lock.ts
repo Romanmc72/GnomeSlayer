@@ -1,6 +1,5 @@
-import { IKey, KeyType } from './key';
+import { KeyType } from './key';
 import { SpriteContainer } from './spriteContainer';
-import Player from '../characters/player';
 
 /**
  * The interface for properties of a lock
@@ -20,15 +19,13 @@ export interface ILock<T extends KeyType> extends SpriteContainer {
    */
   lock: () => void;
   /**
-   * Unlocks the lock
-   * @param key - The key that can unlock the lock
+   * Unlocks the lock if it can be done
    * @returns Nothing
    */
-  unlock: (player: Player) => void;
+  unlock: () => void;
   /**
-   * Tests if a key can unlock the lock
-   * @param key - The key to test with
-   * @returns - Whether or not the key can unlock the lock
+   * Tests if a lock can be unlocked
+   * @returns - Whether or not the player in the scene has the keys to unlock
    */
-  canUnlock: (player: Player) => boolean;
+  canUnlock: () => boolean;
 }

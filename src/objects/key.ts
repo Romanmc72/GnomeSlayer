@@ -3,7 +3,6 @@ import {
   KeyCarrier,
   KeyType,
   Level,
-  ILock,
   SpriteContainerProps,
 } from '../types';
 import { DEFAULT_DEPTH } from '../constants';
@@ -140,14 +139,16 @@ export default class Key implements IKey {
 
   createColliders(): void {
     this.scene.physics.add.collider(this.scene.ground!, this.sprite!);
-    this.scene.physics.add.overlap(
-      this.scene.player.sprite!,
-      this.sprite!,
-      () => {
-        if (!this.carrier) {
-          this.scene.player.addKey(this);
-        }
-      },
+    this.colliders.push(
+      this.scene.physics.add.overlap(
+        this.scene.player.sprite!,
+        this.sprite!,
+        () => {
+          if (!this.carrier && !this.isUsed) {
+            this.scene.player.addKey(this);
+          }
+        },
+      ),
     );
   }
 
@@ -155,12 +156,10 @@ export default class Key implements IKey {
     this.carrier = carrier;
   }
 
-  useKey(lock: ILock<this>) {
-    if (lock.canUnlock(this)) {
-      lock.unlock(this);
-      this.isUsed = true;
-      this.carrier = undefined;
-    }
+  useKey() {
+    this.isUsed = true;
+    this.carrier = undefined;
+    this.disableColliders();
   }
 
   drop(): void {

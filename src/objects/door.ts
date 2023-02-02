@@ -5,7 +5,7 @@ import {
   KeyType,
   Level,
   ILock,
-  SpriteContainer,
+  ISpriteContainer,
   SpriteContainerProps,
 } from '../types';
 import Lock from './lock';
@@ -62,7 +62,7 @@ export interface DoorProps extends SpriteContainerProps {
 /**
  * A door which can be opened, closed, locked, or even hidden
  */
-export default class Door implements SpriteContainer {
+export default class Door implements ISpriteContainer {
   public scene: Level;
 
   private nextSceneName: string;
@@ -172,7 +172,7 @@ export default class Door implements SpriteContainer {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (_o1, _o2) => {
           if (this.scene.player.isInteracting) {
-            this.interact(this.scene.player);
+            this.interact();
           }
         },
       ),
@@ -191,10 +191,10 @@ export default class Door implements SpriteContainer {
     }
   }
 
-  interact(player: Player): void {
+  interact(): void {
     if (!this.isChangingState) {
-      if (this.state === DoorState.LOCKED && this.canUnlock(player)) {
-        this.unlockDoor(player);
+      if (this.canUnlock()) {
+        this.unlockDoor();
       } else if (this.state === DoorState.CLOSED) {
         this.openDoor();
         setTimeout(() => { this.closeDoor(); }, 6000);
@@ -202,19 +202,17 @@ export default class Door implements SpriteContainer {
         this.scene.scene.start(this.nextSceneName);
       }
     }
-    console.log(this.state);
   }
 
   hide(hidden: boolean): void {
     this.sprite?.setVisible(hidden);
   }
 
-  canUnlock(player: Player): boolean {
+  canUnlock(): boolean {
     return (
       this.state === DoorState.LOCKED
       && this.lock !== undefined
-      && this.lock!.isLocked
-      && player.keys[this.lock.type].length > 0
+      && this.lock!.canUnlock()
     );
   }
 
@@ -256,9 +254,9 @@ export default class Door implements SpriteContainer {
     }
   }
 
-  unlockDoor(player: Player): void {
+  unlockDoor(): void {
     if (this.state === DoorState.LOCKED) {
-      this.lock!.unlock(player);
+      this.lock!.unlock();
       this.state = DoorState.CLOSED;
       this.resetIsChangingState();
     }

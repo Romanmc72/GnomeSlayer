@@ -7,6 +7,7 @@ import RedDoor from '../objects/redDoor';
 import { LEVEL_2_NAME } from './Level2';
 import SmallKey from '../objects/smallKey';
 import SmallLock from '../objects/smallLock';
+import Health from '../powerups/health';
 
 export const LEVEL_1_NAME = 'No Way Gnome';
 
@@ -55,6 +56,19 @@ export default class Level1 extends Phaser.Scene implements Level {
       this.gnomes.push(new SmolGnome(this, 200 + (10 * gnomeCount), 0, gnomeCount));
     }
     this.objects.push(new SmallKey({ scene: this, carrier: this.gnomes[0] }));
+    this.objects.push(new Health({
+      scene: this,
+      carrier: this.gnomes[0],
+      healthAmount: 30,
+      spinningFrames: 5,
+      yoyo: true,
+      frameHeight: 20,
+      frameWidth: 20,
+      name: 'heart',
+      spritesheet: 'heart',
+      x: 0,
+      y: 0,
+   }));
   }
 
   preload() {

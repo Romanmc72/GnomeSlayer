@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import {
-  IKey,
   KeyType,
   ILock,
   Level,
@@ -8,7 +7,6 @@ import {
 } from '../types';
 import imageLocationFor from '../helpers';
 import Door from './door';
-import Player from '../characters/player';
 
 /**
  * The properties required to instantiate a lock class
@@ -72,7 +70,7 @@ export default class Lock<T extends KeyType> implements ILock<T> {
 
   private transitioning = false;
 
-  private transitionTime = 2500;
+  private transitionTime = 1000;
 
   constructor(props: LockProps<T>) {
     this.scene = props.scene;
@@ -100,12 +98,13 @@ export default class Lock<T extends KeyType> implements ILock<T> {
     setTimeout(() => { this.transitioning = false; }, this.transitionTime);
   }
 
-  unlock(player: Player): void {
-    if (this.canUnlock(player) && this.isLocked) {
-      const key = player.keys[this.type].pop();
+  unlock(): void {
+    if (this.canUnlock()) {
+      const key = this.scene.player.getKey(this.type);
       if (key === undefined) {
         return;
       }
+      key.useKey();
       this.isLocked = false;
       this.transitioning = true;
       this.sprite!.anims.play(this.unlockingAnimation);
@@ -113,8 +112,8 @@ export default class Lock<T extends KeyType> implements ILock<T> {
     }
   }
 
-  canUnlock(player: Player): boolean {
-    return (player.keys[this.type].length > 0);
+  canUnlock(): boolean {
+    return (this.scene.player.hasKey(this.type) && this.isLocked);
   }
 
   preload(): void {
@@ -164,13 +163,8 @@ export default class Lock<T extends KeyType> implements ILock<T> {
         this.scene.player.sprite!,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (_o1, _o2) => {
-          if (this.scene.player.isInteracting && this.isLocked) {
-            if (this.canUnlock(this.scene.player)) {
-              this.unlock(this.scene.player);
-            }
-            // if (this.scene.player.keys[this.type].length > 0) {
-            //   this.unlock(this.scene.player.keys[this.type].pop()!);
-            // }
+          if (this.scene.player.isInteracting && this.canUnlock()) {
+            this.unlock();
           }
         },
       ),

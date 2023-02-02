@@ -1,6 +1,5 @@
 import Lock from './lock';
 import Door from './door';
-import SmallKey from './smallKey';
 import { KeyType } from '../types';
 
 export interface SmallLockProps {

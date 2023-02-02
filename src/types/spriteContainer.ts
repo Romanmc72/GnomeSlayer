@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
+import { AnimationSettings } from './animation';
 import { Level } from './level';
 
 /**
  * The interface for an object that contains a sprite
  */
-export interface SpriteContainer {
+export interface ISpriteContainer {
   /**
    * The depth of the sprite on screen, defaults are
    * that sprites have no depth so this should fix that
@@ -23,6 +24,10 @@ export interface SpriteContainer {
    * The array of physics collisions/overlaps to detect
    */
   colliders: Phaser.Physics.Arcade.Collider[];
+  /**
+   * The settings defining animations for this sprite
+   */
+  animationSettings: AnimationSettings;
   /**
    * Creates the colliders, intended to separate the business of creating
    * sprites from that of creating the collisions between them, that way we
@@ -77,4 +82,16 @@ export interface SpriteContainerProps {
    * without the file extension or the path
    */
   spritesheet: string;
+  /**
+   * The settings defining animations for this sprite
+   */
+  animationSettings: AnimationSettings;
+  /**
+   * The x coordinate to create at
+   */
+  x: number;
+  /**
+   * The y coordinate to create at
+   */
+  y: number;
 }

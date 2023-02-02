@@ -1,11 +1,15 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
-import { ProjectileOnlyWeapon, SpriteContainer } from '../types';
+import {
+  KeyType,
+  Level,
+  Projectile,
+  ProjectileOnlyWeapon,
+} from '../types';
 import { DEFAULT_DEPTH, INFINITY, WEAPON_ICON_DIMENSIONS } from '../constants';
-import { Projectile } from '../types/projectile';
 
-export default class HUD implements SpriteContainer {
-  public scene: Phaser.Scene;
+export default class HUD {
+  public scene: Level;
 
   public depth = DEFAULT_DEPTH + 100;
 
@@ -51,9 +55,19 @@ export default class HUD implements SpriteContainer {
 
   private clipRemainingYOffset = this.ammoRemainingYOffset - 20;
 
+  private keyInventory: {[keyType in KeyType]: Phaser.GameObjects.Text | undefined} = {
+    [KeyType.SMALL]: undefined,
+    [KeyType.MEDIUM]: undefined,
+    [KeyType.LARGE]: undefined,
+  };
+
+  private keyXOffset = this.ammoRemainingXOffset - 100;
+
+  private keyYOffset = this.clipRemainingYOffset;
+
   public colliders: Phaser.Physics.Arcade.Collider[] = [];
 
-  constructor(scene: Phaser.Scene, player: Player) {
+  constructor(scene: Level, player: Player) {
     this.scene = scene;
     this.player = player;
   }
@@ -111,6 +125,15 @@ export default class HUD implements SpriteContainer {
     object.setY(y);
   }
 
+  private createKeyMap(keyType: KeyType): void {
+    this.keyInventory[keyType] = this.scene.add.text(
+      this.keyXOffset,
+      this.keyYOffset + 18 * keyType,
+      `${this.player.keys[keyType].length}`,
+      { color: this.textColor },
+    );
+  }
+
   public create(): void {
     this.background = this.scene.physics.add.staticImage(
       this.x + this.healthBarWidth - 3,
@@ -155,21 +178,33 @@ export default class HUD implements SpriteContainer {
     );
     healthLabel.depth = this.depth;
     this.texts.push(healthLabel);
+    this.createKeyMap(KeyType.SMALL);
+    this.createKeyMap(KeyType.MEDIUM);
+    this.createKeyMap(KeyType.LARGE);
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
   public createColliders(): void {}
 
+  private updateKeyCount(keyType: KeyType): void {
+    const keys = this.player.keys[keyType].length;
+    this.keyInventory[keyType]!.setText(keys.toString());
+    this.keepTextOnCamera(
+      this.keyInventory[keyType]!,
+      this.keyXOffset,
+      this.keyYOffset + 18 * keyType,
+    );
+  }
+
   public update(): void {
     if (this.isVisible) {
-      const playerMaxHealth = 100;
       this.health.slice(0, this.player.health).forEach(
         (sliver) => {
           sliver.setVisible(true);
           this.keepOnCamera(sliver);
         },
       );
-      this.health.slice(this.player.health, playerMaxHealth).forEach(
+      this.health.slice(this.player.health, this.player.getMaxHealth()).forEach(
         (sliver) => {
           sliver.setVisible(false);
           this.keepOnCamera(sliver);
@@ -203,6 +238,9 @@ export default class HUD implements SpriteContainer {
         this.clipRemainingXOffset,
         this.clipRemainingYOffset,
       );
+      this.updateKeyCount(KeyType.SMALL);
+      this.updateKeyCount(KeyType.MEDIUM);
+      this.updateKeyCount(KeyType.LARGE);
     } else {
       this.background?.setVisible(false);
       this.health.forEach((sliver) => sliver.setVisible(false));

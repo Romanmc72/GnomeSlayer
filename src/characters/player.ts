@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import PlayerError from '../errors/player';
 import {
-  IKey,
   KeyType,
   Level,
-  SpriteContainer,
+  IPowerUp,
+  ISpriteContainer,
   Weapon,
 } from '../types';
 import Fist from '../weapons/fist';
@@ -53,7 +53,7 @@ type KeyboardInput = {
   cycleWeapons: KeyboardKey;
 }
 
-export default class Player implements SpriteContainer {
+export default class Player implements ISpriteContainer {
   public scene: Level;
 
   private x: number;
@@ -122,6 +122,8 @@ export default class Player implements SpriteContainer {
 
   public equippedWeapon: Weapon;
 
+  private maxHealth = 100;
+
   public health: number;
 
   public isAlive = true;
@@ -136,6 +138,8 @@ export default class Player implements SpriteContainer {
 
   public colliders: Phaser.Physics.Arcade.Collider[] = [];
 
+  public powerUps: IPowerUp[] = [];
+
   constructor(props: PlayerProps) {
     this.scene = props.scene;
     const fist = new Fist(this.scene, this);
@@ -147,7 +151,7 @@ export default class Player implements SpriteContainer {
     this.spriteName = props.spriteName ?? GUY_NAME;
     this.spriteSheet = props.spriteSheet ?? `${GUY_NAME}.png`;
     this.frameRate = props.frameRate ?? 20;
-    this.health = props.health ?? 100;
+    this.health = props.health ?? this.maxHealth;
     this.runName = `${this.spriteName}Run`;
     this.turnName = `${this.spriteName}Turn`;
     this.ascendingName = `${this.spriteName}Ascending`;
@@ -323,6 +327,37 @@ export default class Player implements SpriteContainer {
     }
   }
 
+  /**
+   * Try to heal the player by a number at most up to the max health
+   * @param health - The amount of health to try and heal by
+   */
+  public addHealth(health: number): void {
+    this.health += Math.min(this.maxHealth - this.health, health);
+  }
+
+  /**
+   * Brings the player's health to the maximum health
+   */
+  public fullHeal(): void {
+    this.health = this.maxHealth;
+  }
+
+  /**
+   * Getter method for the max health
+   * @returns the current max healt
+   */
+  public getMaxHealth(): number {
+    return this.maxHealth;
+  }
+
+  /**
+   * Increments the max available health
+   * @param healthAmount - The amount to increase the max health by
+   */
+  public increaseMaxHealth(healthAmount: number): void {
+    this.maxHealth += healthAmount;
+  }
+
   public die(): void {
     this.isAlive = false;
   }
@@ -403,6 +438,14 @@ export default class Player implements SpriteContainer {
         }
       });
     }
+  }
+
+  public hasKey(keyType: KeyType): boolean {
+    return this.keys[keyType].length > 0;
+  }
+
+  public getKey(keyType: KeyType): Key | undefined {
+    return this.keys[keyType].pop();
   }
 
   public addKey(key: Key): void {

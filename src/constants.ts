@@ -20,3 +20,8 @@ export const WEAPON_ICON_DIMENSIONS = {
   y: 80,
   depth: DEFAULT_DEPTH + 100,
 };
+
+/**
+ * The default rate at which frames will play (if not specified)
+ */
+export const DEFAULT_FRAME_RATE = 20;

@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import MenuItemError from '../errors/menuItem';
-import { SpriteContainer } from '../types/spriteContainer';
+import { ISpriteContainer } from '../types/spriteContainer';
 import { DEFAULT_DEPTH } from '../constants';
 import { Level } from '../types';
 
-export default class MenuItem implements SpriteContainer {
+export default class MenuItem implements ISpriteContainer {
   public scene: Level;
 
   private x: number;

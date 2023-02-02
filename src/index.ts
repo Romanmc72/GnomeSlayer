@@ -7,7 +7,7 @@ import Level2 from './scenes/Level2';
 const game = new Phaser.Game(
   Object.assign(config, {
     scene: [
-      Menu,
+      // Menu,
       Level1,
       Level2,
     ],

@@ -1,11 +1,11 @@
-import { SpriteContainer } from './spriteContainer';
+import { ISpriteContainer } from './spriteContainer';
 import { Weapon } from './weapon';
 import Player from '../characters/player';
 
 /**
  * The generic interface for an enemy
  */
-export interface Enemy extends SpriteContainer {
+export interface Enemy extends ISpriteContainer {
   /**
    * The ID of this enemy, should be unique throughout the scene
    */
