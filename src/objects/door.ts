@@ -1,19 +1,17 @@
-import Player from '../characters/player';
 import { DEFAULT_DEPTH } from '../constants';
-import imagesLocationFor from '../helpers';
 import {
   KeyType,
-  Level,
   ILock,
-  ISpriteContainer,
   SpriteContainerProps,
 } from '../types';
+import { SpriteContainer } from '../generics';
 import Lock from './lock';
 
-export enum DoorState {
-  OPEN,
-  CLOSED,
-  LOCKED,
+export const enum DoorState {
+  OPEN = 'open',
+  CLOSED = 'closed',
+  LOCKED = 'locked',
+  OPENING = 'opening',
 }
 
 /**
@@ -22,7 +20,7 @@ export enum DoorState {
  * that if there is a locked frame, the frames between the door as locked and
  * the door as closed are the animation of the door unlocking.
  */
-export interface DoorProps extends SpriteContainerProps {
+export interface DoorProps extends Omit<SpriteContainerProps, 'animationSettings' | 'depth'> {
   /**
    * The next scene that this door leads to
    */
@@ -62,105 +60,46 @@ export interface DoorProps extends SpriteContainerProps {
 /**
  * A door which can be opened, closed, locked, or even hidden
  */
-export default class Door implements ISpriteContainer {
-  public scene: Level;
-
+export default class Door extends SpriteContainer {
   private nextSceneName: string;
 
-  public sprite?: Phaser.Physics.Arcade.Sprite;
-
   public colliders: Phaser.Physics.Arcade.Collider[] = [];
-
-  private x: number;
-
-  private y: number;
 
   public depth = DEFAULT_DEPTH - 100;
 
   public state: DoorState;
 
-  private spritesheet: string;
-
-  private name: string;
-
-  private frameWidth: number;
-
-  private frameHeight: number;
-
-  private frameRate: number;
-
-  private openFrame: number;
-
-  private openAnimation: string;
-
-  private openingAnimation: string;
-
-  private closedFrame: number;
-
-  private closedAnimation: string;
-
   private lock?: ILock<KeyType>;
-
-  private lockedFrame?: number;
 
   private stateChangeTimer: number;
 
   private isChangingState = false;
 
   constructor(props: DoorProps) {
-    this.scene = props.scene;
+    super({
+      ...props,
+      animationSettings: {
+        [DoorState.OPEN]: {
+          frameStart: props.openFrame,
+          frameEnd: props.openFrame,
+        },
+        [DoorState.CLOSED]: {
+          frameStart: props.closedFrame,
+          frameEnd: props.closedFrame,
+        },
+        [DoorState.OPENING]: {
+          frameStart: props.closedFrame,
+          frameEnd: props.openFrame,
+          frameRate: props.frameRate,
+          repeat: 0,
+        },
+      },
+      depth: DEFAULT_DEPTH - 100,
+    });
     this.nextSceneName = props.nextSceneName;
-    this.x = props.x;
-    this.y = props.y;
     this.state = props.state;
-    this.spritesheet = props.spritesheet;
-    this.name = props.name;
-    this.frameWidth = props.frameWidth;
-    this.frameHeight = props.frameHeight;
-    this.frameRate = props.frameRate;
-    this.openFrame = props.openFrame;
-    this.closedFrame = props.closedFrame;
     this.lock = props.lock;
-    this.openAnimation = `${this.name}Open`;
-    this.openingAnimation = `${this.name}Opening`;
-    this.closedAnimation = `${this.name}Closed`;
     this.stateChangeTimer = props.stateChangeTimer;
-  }
-
-  preload(): void {
-    this.scene.load.spritesheet(
-      this.name,
-      imagesLocationFor(this.spritesheet),
-      { frameWidth: this.frameWidth, frameHeight: this.frameHeight },
-    );
-  }
-
-  create(): void {
-    this.sprite = this.scene.physics.add.sprite(this.x, this.y, this.name);
-    this.sprite.setDepth(this.depth);
-    this.scene.anims.create({
-      key: this.openAnimation,
-      frames: this.scene.anims.generateFrameNumbers(this.name, {
-        start: this.openFrame,
-        end: this.openFrame,
-      }),
-    });
-    this.scene.anims.create({
-      key: this.closedAnimation,
-      frames: this.scene.anims.generateFrameNumbers(this.name, {
-        start: this.closedFrame,
-        end: this.closedFrame,
-      }),
-    });
-    this.scene.anims.create({
-      key: this.openingAnimation,
-      frames: this.scene.anims.generateFrameNumbers(this.name, {
-        start: this.closedFrame,
-        end: this.openFrame,
-      }),
-      frameRate: this.frameRate,
-      repeat: 0,
-    });
   }
 
   createColliders(): void {
@@ -169,8 +108,7 @@ export default class Door implements ISpriteContainer {
       this.scene.physics.add.overlap(
         this.sprite!,
         this.scene.player.sprite!,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        (_o1, _o2) => {
+        () => {
           if (this.scene.player.isInteracting) {
             this.interact();
           }
@@ -183,10 +121,10 @@ export default class Door implements ISpriteContainer {
     if (!this.isChangingState) {
       switch (this.state) {
         case DoorState.OPEN:
-          this.sprite!.play(this.openAnimation, true);
+          this.sprite!.play(this.getAnimationName(DoorState.OPEN), true);
           break;
         default:
-          this.sprite!.play(this.closedAnimation, true);
+          this.sprite!.play(this.getAnimationName(DoorState.CLOSED), true);
       }
     }
   }
@@ -223,8 +161,8 @@ export default class Door implements ISpriteContainer {
 
   openDoor(): void {
     if (this.state === DoorState.CLOSED) {
-      this.sprite!.anims.play(this.openingAnimation, true);
-      this.sprite!.playAfterRepeat(this.openAnimation);
+      this.sprite!.anims.play(this.getAnimationName(DoorState.OPENING), true);
+      this.sprite!.playAfterRepeat(this.getAnimationName(DoorState.OPEN));
       this.state = DoorState.OPEN;
       this.resetIsChangingState();
     }
@@ -232,8 +170,8 @@ export default class Door implements ISpriteContainer {
 
   closeDoor(): void {
     if (this.state === DoorState.OPEN) {
-      this.sprite!.playReverse(this.openingAnimation, true);
-      this.sprite!.playAfterRepeat(this.closedAnimation);
+      this.sprite!.playReverse(this.getAnimationName(DoorState.OPENING), true);
+      this.sprite!.playAfterRepeat(this.getAnimationName(DoorState.CLOSED));
       this.state = DoorState.CLOSED;
       this.resetIsChangingState();
     }

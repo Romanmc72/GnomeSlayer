@@ -94,4 +94,8 @@ export interface SpriteContainerProps {
    * The y coordinate to create at
    */
   y: number;
+  /**
+   * The depth at which this object will render when created
+   */
+  depth: number;
 }

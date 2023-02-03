@@ -1,95 +1,55 @@
-import Phaser from 'phaser';
 import MenuItemError from '../errors/menuItem';
-import { ISpriteContainer } from '../types/spriteContainer';
+import { SpriteContainer } from '../generics';
 import { DEFAULT_DEPTH } from '../constants';
-import { Level } from '../types';
+import { SpriteContainerProps } from '../types';
 
-export default class MenuItem implements ISpriteContainer {
-  public scene: Level;
+/**
+ * The animation states available to a menu item
+ */
+export enum MenuItemAnimations {
+  SELECTED = 'selected',
+  DESELECTED = 'deselected',
+}
 
-  private x: number;
+/**
+ * The properties required to initialize a menu item
+ */
+export interface MenuItemProps extends Omit<SpriteContainerProps, 'animationSettings' | 'depth'> {
+  /**
+   * The action to perform when the menu item is selected
+   * @returns Nothing
+   */
+  select: () => void,
+}
 
-  private y: number;
-
-  public depth = DEFAULT_DEPTH + 2;
-
-  public spriteName: string;
-
-  public spriteSheet: string;
-
-  public frameHeight: number;
-
-  public frameWidth: number;
-
-  public sprite?: Phaser.Types.Physics.Arcade.SpriteWithStaticBody;
-
+export default class MenuItem extends SpriteContainer {
   public isSelected = false;
-
-  private selectedName: string;
-
-  private deselectedName: string;
 
   public select: () => void;
 
-  public colliders: Phaser.Physics.Arcade.Collider[] = [];
-
-  constructor(
-    scene: Level,
-    x: number,
-    y: number,
-    spriteName: string,
-    spriteSheet: string,
-    frameHeight: number,
-    frameWidth: number,
-    select: () => void,
-  ) {
-    this.scene = scene;
-    this.x = x;
-    this.y = y;
-    this.spriteName = spriteName;
-    this.spriteSheet = spriteSheet;
-    this.frameHeight = frameHeight;
-    this.frameWidth = frameWidth;
-    this.selectedName = `${this.spriteName}Selected`;
-    this.deselectedName = `${this.spriteName}Deselected`;
-    this.select = select;
-  }
-
-  public preload() {
-    this.scene.load.spritesheet(
-      this.spriteName,
-      `assets/${this.spriteSheet}.png`,
-      { frameWidth: this.frameWidth, frameHeight: this.frameHeight },
-    );
-  }
-
-  public create() {
-    this.sprite = this.scene.physics.add.staticSprite(this.x, this.y, this.spriteName);
-    this.sprite.depth = this.depth;
-    this.scene.anims.create({
-      key: this.selectedName,
-      frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
-        start: 1,
-        end: 1,
-      }),
-      repeat: 0,
+  constructor(props: MenuItemProps) {
+    super({
+      ...props,
+      animationSettings: {
+        [MenuItemAnimations.SELECTED]: {
+          frameStart: 1,
+          frameEnd: 1,
+        },
+        [MenuItemAnimations.DESELECTED]: {
+          frameStart: 0,
+          frameEnd: 0,
+        },
+      },
+      depth: DEFAULT_DEPTH + 2,
     });
-    this.scene.anims.create({
-      key: this.deselectedName,
-      frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
-        start: 0,
-        end: 0,
-      }),
-      repeat: 0,
-    });
+    this.select = props.select;
   }
 
   createColliders(): void {
     this.scene.physics.add.collider(
       this.scene.player.sprite!,
       this.sprite!,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      (_o1, _o2) => this.onCollide(),
+      () => this.onCollide(),
     );
   }
 
@@ -102,9 +62,9 @@ export default class MenuItem implements ISpriteContainer {
     }
 
     if (this.isSelected) {
-      this.sprite.anims.play(this.selectedName, true);
+      this.sprite.anims.play(this.getAnimationName(MenuItemAnimations.SELECTED), true);
     } else {
-      this.sprite.anims.play(this.deselectedName, true);
+      this.sprite.anims.play(this.getAnimationName(MenuItemAnimations.DESELECTED), true);
     }
   }
 

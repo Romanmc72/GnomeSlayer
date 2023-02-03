@@ -1,17 +1,24 @@
-import Phaser from 'phaser';
 import {
   KeyType,
   ILock,
-  Level,
   SpriteContainerProps,
 } from '../types';
-import imageLocationFor from '../helpers';
 import Door from './door';
+import { SpriteContainer } from '../generics';
+
+/**
+ * The animations that a lock can play
+ */
+export enum LockAnimations {
+  LOCKED = 'locked',
+  UNLOCKED = 'unlocked',
+  UNLOCKING = 'unlocking',
+}
 
 /**
  * The properties required to instantiate a lock class
  */
-export interface LockProps<T> extends SpriteContainerProps {
+export interface LockProps<T> extends Omit<SpriteContainerProps, 'animationSettings' | 'depth' | 'x' | 'y'> {
   /**
    * THe type of key that fits this lock
    */
@@ -33,38 +40,10 @@ export interface LockProps<T> extends SpriteContainerProps {
   lockedObject: Door;
 }
 
-export default class Lock<T extends KeyType> implements ILock<T> {
-  public scene: Level;
-
+export default class Lock<T extends KeyType> extends SpriteContainer implements ILock<T> {
   public type: T;
 
   public isLocked: boolean;
-
-  public sprite?: Phaser.Physics.Arcade.Sprite;
-
-  public depth: number;
-
-  public colliders: Phaser.Physics.Arcade.Collider[] = [];
-
-  private name: string;
-
-  private spritesheet: string;
-
-  private lockedAnimation: string;
-
-  private unlockingAnimation: string;
-
-  private unlockedAnimation: string;
-
-  private lockFrame = 0;
-
-  private unlockFrame: number;
-
-  private frameWidth: number;
-
-  private frameHeight: number;
-
-  private frameRate: number;
 
   private lockedObject: Door;
 
@@ -73,28 +52,38 @@ export default class Lock<T extends KeyType> implements ILock<T> {
   private transitionTime = 1000;
 
   constructor(props: LockProps<T>) {
-    this.scene = props.scene;
+    super({
+      ...props,
+      animationSettings: {
+        [LockAnimations.LOCKED]: {
+          frameStart: 0,
+          frameEnd: 0,
+        },
+        [LockAnimations.UNLOCKED]: {
+          frameStart: props.unlockFrame,
+          frameEnd: props.unlockFrame,
+        },
+        [LockAnimations.UNLOCKING]: {
+          frameStart: 0,
+          frameEnd: props.unlockFrame,
+          frameRate: props.frameRate,
+          repeat: 0,
+        },
+      },
+      depth: props.lockedObject.depth + 1,
+      x: 0,
+      y: 0,
+    });
     this.type = props.type;
     this.isLocked = props.isLocked;
-    this.name = props.name;
-    this.spritesheet = props.spritesheet;
-    this.unlockFrame = props.unlockFrame;
-    this.lockedAnimation = `${this.name}Locked`;
-    this.unlockedAnimation = `${this.name}Unlocked`;
-    this.unlockingAnimation = `${this.name}Unlocking`;
-    this.unlockFrame = props.unlockFrame;
-    this.frameWidth = props.frameWidth;
-    this.frameHeight = props.frameHeight;
-    this.frameRate = props.frameRate;
     this.lockedObject = props.lockedObject;
     this.lockedObject.setLock(this);
-    this.depth = this.lockedObject.depth + 1;
   }
 
   lock(): void {
     this.isLocked = true;
     this.transitioning = true;
-    this.sprite?.anims.playReverse(this.unlockingAnimation, true);
+    this.sprite?.anims.playReverse(this.getAnimationName(LockAnimations.UNLOCKING), true);
     setTimeout(() => { this.transitioning = false; }, this.transitionTime);
   }
 
@@ -107,7 +96,7 @@ export default class Lock<T extends KeyType> implements ILock<T> {
       key.useKey();
       this.isLocked = false;
       this.transitioning = true;
-      this.sprite!.anims.play(this.unlockingAnimation);
+      this.sprite!.anims.play(this.getAnimationName(LockAnimations.UNLOCKING));
       setTimeout(() => { this.transitioning = false; }, this.transitionTime);
     }
   }
@@ -116,53 +105,12 @@ export default class Lock<T extends KeyType> implements ILock<T> {
     return (this.scene.player.hasKey(this.type) && this.isLocked);
   }
 
-  preload(): void {
-    this.scene.load.spritesheet(
-      this.name,
-      imageLocationFor(this.spritesheet),
-      { frameWidth: this.frameWidth, frameHeight: this.frameHeight },
-    );
-  }
-
-  create(): void {
-    this.sprite = this.scene.physics.add.sprite(
-      this.lockedObject.sprite!.x,
-      this.lockedObject.sprite!.y,
-      this.name,
-    );
-    this.sprite.setDepth(this.depth);
-    this.scene.anims.create({
-      key: this.lockedAnimation,
-      frames: this.scene.anims.generateFrameNumbers(this.name, {
-        start: this.lockFrame,
-        end: this.lockFrame,
-      }),
-    });
-    this.scene.anims.create({
-      key: this.unlockedAnimation,
-      frames: this.scene.anims.generateFrameNumbers(this.name, {
-        start: this.unlockFrame,
-        end: this.unlockFrame,
-      }),
-    });
-    this.scene.anims.create({
-      key: this.unlockingAnimation,
-      frames: this.scene.anims.generateFrameNumbers(this.name, {
-        start: this.lockFrame,
-        end: this.unlockFrame,
-      }),
-      frameRate: this.frameRate,
-      repeat: 0,
-    });
-  }
-
   createColliders(): void {
     this.colliders.push(
       this.scene.physics.add.overlap(
         this.sprite!,
         this.scene.player.sprite!,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        (_o1, _o2) => {
+        () => {
           if (this.scene.player.isInteracting && this.canUnlock()) {
             this.unlock();
           }
@@ -178,9 +126,9 @@ export default class Lock<T extends KeyType> implements ILock<T> {
     this.sprite!.setVelocity(0, 0);
     if (!this.transitioning) {
       if (this.isLocked) {
-        this.sprite?.anims.play(this.lockedAnimation, true);
+        this.sprite?.anims.play(this.getAnimationName(LockAnimations.LOCKED), true);
       } else {
-        this.sprite?.anims.play(this.unlockedAnimation, true);
+        this.sprite?.anims.play(this.getAnimationName(LockAnimations.UNLOCKED), true);
       }
     }
   }

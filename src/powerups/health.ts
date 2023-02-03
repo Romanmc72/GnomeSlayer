@@ -3,7 +3,7 @@ import { SpriteContainer } from '../generics';
 import { DEFAULT_DEPTH } from '../constants';
 import Player from '../characters/player';
 
-export interface HealthProps extends Omit<SpriteContainerProps, 'animationSettings'> {
+export interface HealthProps extends Omit<SpriteContainerProps, 'animationSettings' | 'depth'> {
   /**
    * How much health that this object restores to a player
    */
@@ -23,8 +23,6 @@ export interface HealthProps extends Omit<SpriteContainerProps, 'animationSettin
 }
 
 export default class Health extends SpriteContainer implements IPowerUp {
-  public depth = DEFAULT_DEPTH + 10;
-
   public healthAmount: number;
 
   public isUsed = false;
@@ -42,6 +40,7 @@ export default class Health extends SpriteContainer implements IPowerUp {
           yoyo: props.yoyo,
         },
       },
+      depth: DEFAULT_DEPTH + 10,
       ...props,
     });
     this.healthAmount = props.healthAmount;

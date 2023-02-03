@@ -19,7 +19,7 @@ export class SpriteContainer implements ISpriteContainer {
 
   public animationSettings: AnimationSettings;
 
-  public depth = DEFAULT_DEPTH;
+  public depth: number;
 
   public colliders: Phaser.Physics.Arcade.Collider[] = [];
 
@@ -39,6 +39,7 @@ export class SpriteContainer implements ISpriteContainer {
     this.animationSettings = props.animationSettings;
     this.x = props.x;
     this.y = props.y;
+    this.depth = props.depth;
   }
 
   preload(): void {
