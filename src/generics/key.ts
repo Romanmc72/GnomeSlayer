@@ -2,16 +2,16 @@ import {
   IKey,
   KeyCarrier,
   KeyType,
-  Level,
-  SpriteContainerProps,
+  ILevel,
+  PartialSpriteContainerProps,
 } from '../types';
 import { DEFAULT_DEPTH } from '../constants';
-import { SpriteContainer } from '../generics';
+import { SpriteContainer } from './spriteContainer';
 
 /**
  * The properties required to instantiate a key
  */
-export interface KeyProps extends Omit<SpriteContainerProps, 'animationSettings' | 'depth'> {
+export interface KeyProps extends PartialSpriteContainerProps {
   /**
    * The type of key belonging to a certain type of lock
    */
@@ -27,8 +27,8 @@ export interface KeyProps extends Omit<SpriteContainerProps, 'animationSettings'
   spinningFrames: number;
 }
 
-export default class Key extends SpriteContainer implements IKey {
-  public scene: Level;
+export class Key extends SpriteContainer implements IKey {
+  public scene: ILevel;
 
   public type: KeyType;
 

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { AnimationSettings } from './animation';
-import { Level } from './level';
+import { ILevel } from './level';
 
 /**
  * The interface for an object that contains a sprite
@@ -14,7 +14,7 @@ export interface ISpriteContainer {
   /**
    * The scene that the sprite is a part of
    */
-  scene: Level;
+  scene: ILevel;
   /**
    * The sprite itself. Defaults to undefined as it cannot be initialized
    * until the SpriteContainer.create() method is called.
@@ -24,10 +24,6 @@ export interface ISpriteContainer {
    * The array of physics collisions/overlaps to detect
    */
   colliders: Phaser.Physics.Arcade.Collider[];
-  /**
-   * The settings defining animations for this sprite
-   */
-  animationSettings: AnimationSettings;
   /**
    * Creates the colliders, intended to separate the business of creating
    * sprites from that of creating the collisions between them, that way we
@@ -51,20 +47,26 @@ export interface ISpriteContainer {
    * @returns Nothing.
    */
   update: () => void;
+  /**
+   * Override the current scene for this sprite container with a new one
+   * @param scene The scene to which this object belongs
+   * @returns Nothing
+   */
+  setScene: (scene: ILevel) => void;
 }
 
 /**
  * The props you will definitely need if you are initializing a new sprite
  */
-export interface SpriteContainerProps {
+export interface PartialSpriteContainerProps {
   /**
    * The scene the sprite will live in
    */
-  scene: Level;
+  scene: ILevel;
   /**
    * The frame rate for the sprite's animations
    */
-  frameRate: number;
+  frameRate?: number;
   /**
    * The height of one frame from the spritesheet
    */
@@ -83,10 +85,6 @@ export interface SpriteContainerProps {
    */
   spritesheet: string;
   /**
-   * The settings defining animations for this sprite
-   */
-  animationSettings: AnimationSettings;
-  /**
    * The x coordinate to create at
    */
   x: number;
@@ -94,6 +92,13 @@ export interface SpriteContainerProps {
    * The y coordinate to create at
    */
   y: number;
+}
+
+export interface SpriteContainerProps extends PartialSpriteContainerProps {
+  /**
+   * The settings defining animations for this sprite
+   */
+  animationSettings: AnimationSettings;
   /**
    * The depth at which this object will render when created
    */

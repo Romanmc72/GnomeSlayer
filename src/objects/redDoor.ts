@@ -1,5 +1,5 @@
 import { KeyType, Level, ILock } from '../types';
-import Door, { DoorState } from './door';
+import { Door, DoorState } from '../generics';
 
 export interface RedDoorProps {
   scene: Level;

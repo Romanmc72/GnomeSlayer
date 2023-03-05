@@ -1,66 +1,29 @@
-import Phaser from 'phaser';
 import {
   Enemy,
-  Level,
+  PartialSpriteContainerProps,
   Weapon,
 } from '../types';
 import Player from './player';
 import { DEFAULT_DEPTH } from '../constants';
+import { SpriteContainer } from '../generics';
 
-export default class SmolGnome implements Enemy {
-  public scene: Level;
+export enum SmolGnomeAnimations {
+  TURN = 'turn',
+  RUN = 'run',
+  HURT = 'hurt',
+  DIE = 'die',
+}
 
-  public depth = DEFAULT_DEPTH - 1;
-
+export default class SmolGnome extends SpriteContainer implements Enemy {
   public health = 30;
-
-  public name = 'SmolGnome';
 
   public jump = 100;
 
   private jumpProbability = 0.30;
 
-  private spriteName = 'smolGnome';
-
-  private spriteSheet = `${this.spriteName}.png`;
-
-  private frameWidth = 24;
-
-  private frameHeight = this.frameWidth;
-
   public attackDamage = 5;
 
   public isAlive = true;
-
-  private x: number;
-
-  private y: number;
-
-  public sprite?: Phaser.Physics.Arcade.Sprite;
-
-  private frameRate = 20;
-
-  private turnName: string;
-
-  private turnFrameStart = 1;
-
-  private turnFrameSize = 6;
-
-  private runName: string;
-
-  private runFrameStart = this.turnFrameStart + this.turnFrameSize;
-
-  private runFrameSize = 2;
-
-  private hurtName: string;
-
-  private hurtFrame = 0;
-
-  private deathName: string;
-
-  private deathFrameStart = this.runFrameStart + this.runFrameSize;
-
-  private deathFrameSize = 13;
 
   private immunities: Weapon[] = [];
 
@@ -72,21 +35,45 @@ export default class SmolGnome implements Enemy {
 
   private hitRecoveryPeriodMs = 250;
 
-  public id: number;
-
-  public colliders: Phaser.Physics.Arcade.Collider[] = [];
-
   public facingRight = false;
 
-  constructor(scene: Level, x: number, y: number, id: number) {
-    this.scene = scene;
-    this.x = x;
-    this.y = y;
-    this.id = id;
-    this.turnName = `${this.name}Turn`;
-    this.runName = `${this.name}Run`;
-    this.hurtName = `${this.name}Hurt`;
-    this.deathName = `${this.name}Die`;
+  constructor(props: Omit<
+    PartialSpriteContainerProps,
+    | 'frameWidth'
+    | 'frameHeight'
+    | 'frameRate'
+    | 'name'
+    | 'spritesheet'
+  >) {
+    super({
+      ...props,
+      name: 'smolGnome',
+      spritesheet: 'smolGnome',
+      frameHeight: 24,
+      frameWidth: 24,
+      frameRate: 20,
+      animationSettings: {
+        [SmolGnomeAnimations.TURN]: {
+          frameStart: 1,
+          frameEnd: 6,
+        },
+        [SmolGnomeAnimations.RUN]: {
+          frameStart: 7,
+          frameEnd: 8,
+        },
+        [SmolGnomeAnimations.HURT]: {
+          frameStart: 0,
+          frameEnd: 0,
+        },
+        [SmolGnomeAnimations.DIE]: {
+          frameStart: 9,
+          frameEnd: 22,
+          frameRate: 5,
+          repeat: 0,
+        },
+      },
+      depth: DEFAULT_DEPTH - 1,
+    });
   }
 
   private resetDamage() {
@@ -135,7 +122,7 @@ export default class SmolGnome implements Enemy {
       this.facingRight = true;
       this.sprite?.setVelocityX(-150);
     }
-    this.sprite!.anims.play(this.hurtName, true);
+    this.sprite!.anims.play(this.getAnimationName(SmolGnomeAnimations.HURT), true);
   }
 
   public isImmune(weapon: Weapon): boolean {
@@ -153,59 +140,15 @@ export default class SmolGnome implements Enemy {
   private andStayDead() {
     this.sprite?.setVelocity(0, 0);
     const animationIndex = (this.sprite?.anims.currentFrame?.index ?? -1 + 1);
-    if (animationIndex < this.deathFrameSize) {
-      this.sprite?.anims.play(this.deathName, true);
+    const frameCount = (
+      this.animationSettings[SmolGnomeAnimations.DIE].frameEnd
+      - this.animationSettings[SmolGnomeAnimations.DIE].frameStart
+    );
+    if (animationIndex < frameCount) {
+      this.sprite?.anims.play(this.getAnimationName(SmolGnomeAnimations.DIE), true);
     } else {
       this.sprite?.anims.pause(this.sprite.anims.currentAnim.frames[-1]);
     }
-  }
-
-  public preload(): void {
-    this.scene.load.spritesheet(
-      this.spriteName,
-      `assets/${this.spriteSheet}`,
-      { frameWidth: this.frameWidth, frameHeight: this.frameHeight },
-    );
-  }
-
-  public create(): void {
-    this.sprite = this.scene.physics.add.sprite(this.x, this.y, this.spriteName);
-    this.sprite.depth = this.depth;
-    this.sprite.setGravityY(300);
-    this.scene.anims.create({
-      key: this.turnName,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: this.turnFrameStart,
-        end: this.turnFrameStart + this.turnFrameSize - 1,
-      }),
-      frameRate: this.frameRate / 4,
-      repeat: -1,
-      yoyo: true,
-    });
-    this.scene.anims.create({
-      key: this.hurtName,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: this.hurtFrame,
-        end: this.hurtFrame,
-      }),
-    });
-    this.scene.anims.create({
-      key: this.runName,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: this.runFrameStart,
-        end: this.runFrameStart + this.runFrameSize - 1,
-      }),
-      repeat: -1,
-    });
-    this.scene.anims.create({
-      key: this.deathName,
-      frames: this.scene.anims.generateFrameNames(this.spriteName, {
-        start: this.deathFrameStart,
-        end: this.deathFrameStart + this.deathFrameSize - 1,
-      }),
-      frameRate: this.frameRate / 4,
-      repeat: 0,
-    });
   }
 
   public createColliders(): void {
@@ -215,8 +158,7 @@ export default class SmolGnome implements Enemy {
       this.scene.physics.add.collider(
         this.scene.player.sprite!,
         this.sprite!,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        (_o1, _o2) => {
+        () => {
           this.attack(this.scene.player);
         },
       ),
@@ -225,43 +167,35 @@ export default class SmolGnome implements Enemy {
       this.scene.physics.add.collider(
         this.scene.player.sprite!,
         this.sprite!,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        (_o1, _o2) => {
+        () => {
           this.attack(this.scene.player);
         },
       ),
     );
   }
 
-  private disableColliders(): void {
-    this.colliders.forEach((collider) => {
-      // eslint-disable-next-line no-param-reassign
-      collider.active = false;
-    });
-  }
-
   private runLeft() {
     this.facingRight = false;
     this.sprite?.setVelocityX(this.speed * -1);
-    this.sprite?.anims.play(this.runName, true);
+    this.sprite?.anims.play(this.getAnimationName(SmolGnomeAnimations.RUN), true);
   }
 
   private runRight() {
     this.facingRight = true;
     this.sprite?.setVelocityX(this.speed);
-    this.sprite?.anims.play(this.runName, true);
+    this.sprite?.anims.play(this.getAnimationName(SmolGnomeAnimations.RUN), true);
   }
 
   private turnRight() {
     this.facingRight = true;
     this.sprite?.setVelocityX(0);
-    this.sprite?.anims.play(this.turnName, true);
+    this.sprite?.anims.play(this.getAnimationName(SmolGnomeAnimations.TURN), true);
   }
 
   private turnLeft() {
     this.facingRight = false;
     this.sprite?.setVelocityX(0);
-    this.sprite?.anims.play(this.turnName, true);
+    this.sprite?.anims.play(this.getAnimationName(SmolGnomeAnimations.TURN), true);
   }
 
   public update(): void {

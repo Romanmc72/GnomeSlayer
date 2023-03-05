@@ -1,233 +1,40 @@
-import Phaser from 'phaser';
-import {
-  Enemy,
-  Level,
-  MeleeOnlyWeapon,
-} from '../types';
+import { ILevel } from '../types';
 import Player from '../characters/player';
-import PlayerError from '../errors/player';
-import { DEFAULT_DEPTH, INFINITY, WEAPON_ICON_DIMENSIONS } from '../constants';
+import { DEFAULT_DEPTH, INFINITY } from '../constants';
+import { MeleeOnlyWeapon } from '../generics';
 
-export default class Fist implements MeleeOnlyWeapon {
-  public ammo = INFINITY;
+export interface FistProps {
+  /**
+   * The scene for this fist
+   */
+  scene: ILevel;
+  /**
+   * The player wielding the fist
+   */
+  player: Player;
+}
 
-  public sprite?: Phaser.Physics.Arcade.Sprite;
-
-  public depth = DEFAULT_DEPTH;
-
-  public canFire = true;
-
-  public canDrop = false;
-
-  public isDropped = false;
-
-  public isMelee = true;
-
-  public isProjectile = false;
-
-  public scene: Level;
-
-  public player: Player;
-
-  public meleeDamage = 10;
-
-  public rateOfFire = 1;
-
-  private spriteName = 'fist';
-
-  private spriteSheet = `${this.spriteName}.png`;
-
-  private frameCount = 6;
-
-  private frameWidth = 24;
-
-  private frameHeight = 20;
-
-  private frameRate = 20;
-
-  private isFired = false;
-
-  private fireAnimationRight = `${this.spriteName}PunchRight`;
-
-  private fireAnimationLeft = `${this.spriteName}PunchLeft`;
-
-  private animationIndex = 0;
-
-  public hitBoxWidth: number = this.frameWidth;
-
-  public hitBoxHeight: number = this.frameHeight;
-
-  public blowback = 300;
-
-  public collider?: Phaser.Physics.Arcade.Collider;
-
-  public icon?: Phaser.Physics.Arcade.Image;
-
-  private iconName = `${this.spriteName}Icon`;
-
-  public colliders: Phaser.Physics.Arcade.Collider[] = [];
-
-  constructor(scene: Level, player: Player) {
-    this.scene = scene;
-    this.player = player;
-  }
-
-  public preload(): void {
-    this.scene.load.spritesheet(
-      this.spriteName,
-      `assets/${this.spriteSheet}`,
-      { frameWidth: this.frameWidth, frameHeight: this.frameHeight },
-    );
-    this.scene.load.spritesheet(
-      this.iconName,
-      `assets/${this.iconName}.png`,
-      {
-        frameWidth: WEAPON_ICON_DIMENSIONS.width,
-        frameHeight: WEAPON_ICON_DIMENSIONS.height,
-      },
-    );
-  }
-
-  public create(): void {
-    if (!(this.player.sprite)) {
-      throw new PlayerError('Attempted to access player attributes before creation');
-    }
-    this.sprite = this.scene.physics.add.sprite(
-      this.player.sprite.x,
-      this.player.sprite.y,
-      this.spriteName,
-    );
-    this.sprite.depth = this.depth;
-    this.sprite.setGravityY(0);
-    this.sprite.setVisible(false);
-    this.sprite.depth = this.depth;
-    this.scene.anims.create({
-      key: this.fireAnimationRight,
-      frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
-        start: 0,
-        end: this.frameCount - 1,
-      }),
-      frameRate: this.frameRate,
-      repeat: 0,
-    });
-    this.scene.anims.create({
-      key: this.fireAnimationLeft,
-      frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
-        start: this.frameCount,
-        end: 2 * this.frameCount - 1,
-      }),
-      frameRate: this.frameRate,
-      repeat: 0,
-    });
-    this.icon = this.scene.physics.add.staticImage(
-      WEAPON_ICON_DIMENSIONS.x,
-      WEAPON_ICON_DIMENSIONS.y,
-      this.iconName,
-    );
-    this.icon.depth = WEAPON_ICON_DIMENSIONS.depth;
-    this.displayIcon(false);
-  }
-
-  public createColliders(): void {
-    this.scene.gnomes.forEach((gnome) => {
-      const collider = this.scene.physics.add.overlap(
-        gnome.sprite!,
-        this.sprite!,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        (_o1, _o2) => {
-          this.onHit(gnome);
-          if (gnome.health <= 0) {
-            gnome.die();
-          }
-        },
-      );
-      this.colliders.push(collider);
-      gnome.colliders.push(collider);
+export default class Fist extends MeleeOnlyWeapon {
+  constructor(props: FistProps) {
+    super({
+      name: 'fist',
+      spritesheet: 'fist',
+      meleeDamage: 10,
+      blowback: 300,
+      frameHeight: 20,
+      frameWidth: 24,
+      frameRate: 12,
+      iconName: 'fistIcon',
+      idleFrames: 1,
+      fireFrames: 6,
+      rateOfFire: 0.5,
+      ammo: INFINITY,
+      depth: DEFAULT_DEPTH,
+      canDrop: false,
+      x: 0,
+      y: 0,
+      player: props.player,
+      scene: props.scene,
     });
   }
-
-  public interact(player: Player): void {
-    // nonsense, just needed this method to exist
-    this.isDropped = !player.isAlive;
-  }
-
-  public displayIcon(display: boolean): void {
-    this.icon!.setVisible(display);
-  }
-
-  public update(): void {
-    if (this.player.equippedWeapon === this) {
-      if (!(this.player.sprite)) {
-        throw new PlayerError('Attempted to access player attributes before creation');
-      }
-      this.sprite?.setVelocity(0, 0);
-      const xOffset = (this.frameWidth / 2)
-        + (
-          (this.player.facingRight ? 1 : -1)
-          * (this.frameWidth / 2)
-        );
-      const yOffset = this.frameHeight / 2;
-      this.sprite?.setX(this.player.sprite.body.x + xOffset);
-      this.sprite?.setY(this.player.sprite.body.y + yOffset);
-      if (this.isFired) {
-        this.setCollider(true);
-        this.displayFist();
-      } else {
-        this.setCollider(false);
-      }
-    }
-  }
-
-  private setCollider(active: boolean) {
-    if (this.collider?.active !== undefined) {
-      this.collider.active = active;
-    }
-  }
-
-  private reset(): void {
-    this.sprite?.setVisible(false);
-    this.isFired = false;
-    setTimeout(() => { this.canFire = true; }, 500);
-  }
-
-  private displayFist() {
-    this.animationIndex = (this.sprite?.anims.currentFrame?.index ?? -1 + 1) % this.frameCount;
-    if (this.player.facingRight) {
-      this.sprite?.anims.play(
-        { key: this.fireAnimationRight, startFrame: this.animationIndex },
-        true,
-      );
-    } else {
-      this.sprite?.anims.play(
-        { key: this.fireAnimationLeft, startFrame: this.animationIndex },
-        true,
-      );
-    }
-  }
-
-  public fire(): void {
-    if (this.canFire) {
-      this.canFire = false;
-      this.isFired = true;
-      this.sprite?.setVisible(true);
-      setTimeout(() => this.reset(), 250);
-    }
-  }
-
-  public onHit(enemy: Enemy) {
-    if (this.isFired && !enemy.isImmune(this)) {
-      enemy.takeDamage(this.meleeDamage);
-      if (this.sprite?.body.touching.left) {
-        enemy.sprite?.setVelocityX(-1 * this.blowback);
-      } else if (this.sprite?.body.touching.right) {
-        enemy.sprite?.setVelocityX(this.blowback);
-      }
-      if (enemy.health <= 0) {
-        enemy.die();
-      }
-    }
-  }
-
-  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
-  public reload(): void {}
 }

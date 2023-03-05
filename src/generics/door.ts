@@ -2,10 +2,10 @@ import { DEFAULT_DEPTH } from '../constants';
 import {
   KeyType,
   ILock,
-  SpriteContainerProps,
+  PartialSpriteContainerProps,
 } from '../types';
-import { SpriteContainer } from '../generics';
-import Lock from './lock';
+import { SpriteContainer } from './spriteContainer';
+import { Lock } from './lock';
 
 export const enum DoorState {
   OPEN = 'open',
@@ -20,7 +20,7 @@ export const enum DoorState {
  * that if there is a locked frame, the frames between the door as locked and
  * the door as closed are the animation of the door unlocking.
  */
-export interface DoorProps extends Omit<SpriteContainerProps, 'animationSettings' | 'depth'> {
+export interface DoorProps extends PartialSpriteContainerProps {
   /**
    * The next scene that this door leads to
    */
@@ -60,7 +60,7 @@ export interface DoorProps extends Omit<SpriteContainerProps, 'animationSettings
 /**
  * A door which can be opened, closed, locked, or even hidden
  */
-export default class Door extends SpriteContainer {
+export class Door extends SpriteContainer {
   private nextSceneName: string;
 
   public colliders: Phaser.Physics.Arcade.Collider[] = [];
@@ -137,7 +137,11 @@ export default class Door extends SpriteContainer {
         this.openDoor();
         setTimeout(() => { this.closeDoor(); }, 6000);
       } else if (this.state === DoorState.OPEN) {
-        this.scene.scene.start(this.nextSceneName);
+        // this.scene.scene.start(this.nextSceneName);
+        this.scene.nextLevel(
+          this.nextSceneName,
+          { player: this.scene.player.getProps() },
+        );
       }
     }
   }
@@ -154,9 +158,9 @@ export default class Door extends SpriteContainer {
     );
   }
 
-  private resetIsChangingState(): void {
+  private resetIsChangingState(timeMS?: number): void {
     this.isChangingState = true;
-    setTimeout(() => { this.isChangingState = false; }, this.stateChangeTimer);
+    setTimeout(() => { this.isChangingState = false; }, timeMS ?? this.stateChangeTimer);
   }
 
   openDoor(): void {
@@ -196,7 +200,7 @@ export default class Door extends SpriteContainer {
     if (this.state === DoorState.LOCKED) {
       this.lock!.unlock();
       this.state = DoorState.CLOSED;
-      this.resetIsChangingState();
+      this.resetIsChangingState(this.lock!.getTransitionTime());
     }
   }
 

@@ -1,5 +1,5 @@
 import { ISpriteContainer } from './spriteContainer';
-import { Weapon } from './weapon';
+import { IWeapon } from '../generics';
 import Player from '../characters/player';
 
 /**
@@ -7,17 +7,9 @@ import Player from '../characters/player';
  */
 export interface Enemy extends ISpriteContainer {
   /**
-   * The ID of this enemy, should be unique throughout the scene
-   */
-  id: number;
-  /**
    * The amount of health this enemy has
    */
   health: number;
-  /**
-   * The name of the enemy (like "smolGnome" not like "steven")
-   */
-  name: string;
   /**
    * How much attack damage this enemy will do to the player
    */
@@ -27,7 +19,7 @@ export interface Enemy extends ISpriteContainer {
    *
    * @default undefined
    */
-  weapon?: Weapon;
+  weapon?: IWeapon;
   /**
    * The jump height of the enemy
    */
@@ -54,7 +46,7 @@ export interface Enemy extends ISpriteContainer {
    * @param weapon - The weapon type
    * @returns - Whether or not the enemy is immune to attack from this weapon
    */
-  isImmune: (weapon: Weapon) => boolean;
+  isImmune: (weapon: IWeapon) => boolean;
   /**
    * Flips the isAlive flag and cleans up other active properties of the enemy
    * to make them truly dead
