@@ -1,10 +1,10 @@
 import {
   KeyType,
   ILock,
-  SpriteContainerProps,
+  PartialSpriteContainerProps,
 } from '../types';
-import Door from './door';
-import { SpriteContainer } from '../generics';
+import { Door } from './door';
+import { SpriteContainer } from './spriteContainer';
 
 /**
  * The animations that a lock can play
@@ -18,7 +18,7 @@ export enum LockAnimations {
 /**
  * The properties required to instantiate a lock class
  */
-export interface LockProps<T> extends Omit<SpriteContainerProps, 'animationSettings' | 'depth' | 'x' | 'y'> {
+export interface LockProps<T> extends Omit<PartialSpriteContainerProps, 'x' | 'y'> {
   /**
    * THe type of key that fits this lock
    */
@@ -40,7 +40,7 @@ export interface LockProps<T> extends Omit<SpriteContainerProps, 'animationSetti
   lockedObject: Door;
 }
 
-export default class Lock<T extends KeyType> extends SpriteContainer implements ILock<T> {
+export class Lock<T extends KeyType> extends SpriteContainer implements ILock<T> {
   public type: T;
 
   public isLocked: boolean;
@@ -103,6 +103,10 @@ export default class Lock<T extends KeyType> extends SpriteContainer implements 
 
   canUnlock(): boolean {
     return (this.scene.player.hasKey(this.type) && this.isLocked);
+  }
+
+  getTransitionTime(): number {
+    return this.transitionTime;
   }
 
   createColliders(): void {

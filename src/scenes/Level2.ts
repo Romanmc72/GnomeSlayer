@@ -1,35 +1,18 @@
-import Phaser from 'phaser';
 import Player from '../characters/player';
-import { Enemy, Level, SpriteContainer } from '../types';
+import { Enemy, ISpriteContainer } from '../types';
+import { Level } from '../generics';
 
 export const LEVEL_2_NAME = 'LEVEL_2';
 
-export default class Level2 extends Phaser.Scene implements Level {
-  public player: Player;
-
-  public gnomes: Enemy[] = [];
-
-  public objects: SpriteContainer[] = [];
-
+export default class Level2 extends Level {
   constructor() {
-    super(LEVEL_2_NAME);
-    this.player = new Player({
-      x: 0,
-      y: 0,
-      scene: this,
+    super({
+      levelName: LEVEL_2_NAME,
+      gameHeight: 500,
+      gameWidth: 1000,
+      playerX: 0,
+      playerY: 0,
+      groundConfig: {},
     });
-  }
-
-  preload() {
-    this.player.preload();
-  }
-
-  create() {
-    this.player.create();
-    this.player.createColliders();
-  }
-
-  update() {
-    this.player.update();
   }
 }

@@ -248,6 +248,9 @@ export default class HUD {
       this.player.equippedWeapon.displayIcon(false);
       this.ammoRemaining!.setVisible(false);
       this.clipRemaining!.setVisible(false);
+      this.keyInventory[KeyType.SMALL]?.setVisible(false);
+      this.keyInventory[KeyType.MEDIUM]?.setVisible(false);
+      this.keyInventory[KeyType.LARGE]?.setVisible(false);
     }
   }
 }

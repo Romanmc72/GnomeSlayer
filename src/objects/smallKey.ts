@@ -1,5 +1,5 @@
 import { KeyCarrier, KeyType, Level } from '../types';
-import Key from './key';
+import { Key } from '../generics';
 
 /**
  * The properties required for the all small keys

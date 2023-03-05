@@ -4,13 +4,13 @@ import MenuItem from '../objects/menuItem';
 import { LEVEL_1_NAME } from './Level1';
 import PlayerError from '../errors/player';
 import MenuItemError from '../errors/menuItem';
-import { Enemy, Level } from '../types';
-import { SpriteContainer } from '../types/spriteContainer';
+import { Enemy, ILevel, IntraLevelData, ISpriteContainer } from '../types';
+import { GAME_HEIGHT, GAME_WIDTH } from '../constants';
 
 const TITLE_NAME = 'title';
 const GUY_SIZE = 24;
 
-export default class Menu extends Phaser.Scene implements Level {
+export default class Menu extends Phaser.Scene implements ILevel {
   private gameOver = false;
 
   private frameRate = 20;
@@ -21,7 +21,7 @@ export default class Menu extends Phaser.Scene implements Level {
 
   public gnomes: Enemy[] = [];
 
-  public objects: SpriteContainer[] = [];
+  public objects: ISpriteContainer[] = [];
 
   private start: MenuItem;
 
@@ -32,30 +32,42 @@ export default class Menu extends Phaser.Scene implements Level {
   constructor() {
     super('Menu');
     this.player = new Player({ scene: this, x: 0, y: 0 });
-    this.start = new MenuItem(
-      this,
-      112,
-      300,
-      'start',
-      'start',
-      48,
-      224,
-      () => this.scene.start(LEVEL_1_NAME),
-    );
-    this.quit = new MenuItem(
-      this,
-      300,
-      400,
-      'quit',
-      'quit',
-      48,
-      176,
-      () => {
+    this.start = new MenuItem({
+      scene: this,
+      x: 112,
+      y: 300,
+      spritesheet: 'start',
+      name: 'start',
+      frameHeight: 48,
+      frameWidth: 224,
+      select: () => this.scene.start(LEVEL_1_NAME),
+    });
+    this.quit = new MenuItem({
+      scene: this,
+      x: 300,
+      y: 400,
+      spritesheet: 'quit',
+      name: 'quit',
+      frameHeight: 48,
+      frameWidth: 176,
+      select: () => {
         this.player.die();
         this.gameOver = true;
       },
-    );
+    });
   }
+
+  getHeight(): number {
+    return this.physics.world.bounds.height;
+  }
+
+  getWidth(): number {
+    return this.physics.world.bounds.width;
+  }
+
+  addObject(object: ISpriteContainer): void {}
+
+  nextLevel(levelName: string, data?: IntraLevelData | undefined): void {}
 
   /**
    * Pre loads static image assets for use as characters, background, and environment

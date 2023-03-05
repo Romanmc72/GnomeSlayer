@@ -27,6 +27,10 @@ export default class MenuItem extends SpriteContainer {
 
   public select: () => void;
 
+  private xCoordinate: number;
+
+  private yCoordinate: number;
+
   constructor(props: MenuItemProps) {
     super({
       ...props,
@@ -43,6 +47,8 @@ export default class MenuItem extends SpriteContainer {
       depth: DEFAULT_DEPTH + 2,
     });
     this.select = props.select;
+    this.xCoordinate = props.x;
+    this.yCoordinate = props.y;
   }
 
   createColliders(): void {
@@ -54,11 +60,20 @@ export default class MenuItem extends SpriteContainer {
   }
 
   public update() {
+    this.sprite!.setImmovable(true);
+    this.sprite!.setVelocity(0, 0);
+    this.sprite!.setGravity(0, 0);
+    this.sprite!.setX(this.xCoordinate);
+    this.sprite!.setY(this.yCoordinate);
     if (!(this.sprite)) {
       throw new MenuItemError(
         'Required MenuItem attributes not set, call MenuItem.create()'
         + ' before using this method',
       );
+    }
+
+    if (!this.sprite!.body.touching.up) {
+      this.isSelected = false;
     }
 
     if (this.isSelected) {

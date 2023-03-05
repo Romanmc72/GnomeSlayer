@@ -2,15 +2,14 @@ import Phaser from 'phaser';
 import PlayerError from '../errors/player';
 import {
   KeyType,
-  Level,
+  ILevel,
   IPowerUp,
   ISpriteContainer,
-  Weapon,
 } from '../types';
 import Fist from '../weapons/fist';
 import HUD from '../objects/hud';
 import { DEFAULT_DEPTH } from '../constants';
-import Key from '../objects/key';
+import { Key, IWeapon } from '../generics';
 
 const GUY_NAME = 'dumbguy';
 
@@ -22,14 +21,14 @@ export type KeyRing = {
  * The optional and require properties to initialize a player
  */
 export interface PlayerProps {
-  scene: Level;
+  scene: ILevel;
   x: number;
   y: number;
   spriteName?: string;
   spriteSheet?: string;
   frameRate?: number;
-  weapons?: Weapon[];
-  equippedWeapon?: Weapon;
+  weapons?: IWeapon[];
+  equippedWeapon?: IWeapon;
   health?: number;
 }
 
@@ -54,7 +53,7 @@ type KeyboardInput = {
 }
 
 export default class Player implements ISpriteContainer {
-  public scene: Level;
+  public scene: ILevel;
 
   private x: number;
 
@@ -112,7 +111,7 @@ export default class Player implements ISpriteContainer {
 
   public cursor?: KeyboardInput;
 
-  public weapons: Weapon[] = [];
+  public weapons: IWeapon[] = [];
 
   public keys: KeyRing = {
     [KeyType.SMALL]: [],
@@ -120,7 +119,7 @@ export default class Player implements ISpriteContainer {
     [KeyType.LARGE]: [],
   };
 
-  public equippedWeapon: Weapon;
+  public equippedWeapon: IWeapon;
 
   private maxHealth = 100;
 
@@ -142,10 +141,10 @@ export default class Player implements ISpriteContainer {
 
   constructor(props: PlayerProps) {
     this.scene = props.scene;
-    const fist = new Fist(this.scene, this);
-    props.weapons?.push(fist);
     this.x = props.x;
     this.y = props.y;
+    const fist = new Fist({ scene: this.scene, player: this });
+    props.weapons?.push(fist);
     this.weapons = props.weapons ?? [fist];
     this.equippedWeapon = props.equippedWeapon ?? this.weapons[0];
     this.spriteName = props.spriteName ?? GUY_NAME;
@@ -189,9 +188,9 @@ export default class Player implements ISpriteContainer {
       this.y,
       this.spriteName,
     );
-    this.sprite.setDepth(this.depth);
-    this.sprite.body.setGravityY(this.gravity);
-    this.sprite.setBounce(0.2);
+    this.sprite!.setDepth(this.depth);
+    this.sprite!.body.setGravityY(this.gravity);
+    this.sprite!.setBounce(0.2);
     this.scene.anims.create({
       key: this.runName,
       frames: this.scene.anims.generateFrameNumbers(this.spriteName, {
@@ -402,7 +401,7 @@ export default class Player implements ISpriteContainer {
     this.sprite?.anims.play(this.descendingName, true);
   }
 
-  public addWeapon(weapon: Weapon): void {
+  public addWeapon(weapon: IWeapon): void {
     // eslint-disable-next-line no-param-reassign
     weapon.player = this;
     weapon.sprite!.setDepth(this.depth);
@@ -431,10 +430,11 @@ export default class Player implements ISpriteContainer {
           const removed = this.weapons.splice(index, 1)[0];
           removed.sprite!.setVelocityY(-this.gravity);
           removed.sprite!.setGravityY(this.gravity);
-          removed.x = this.sprite?.body.x;
-          removed.y = this.sprite?.body.y;
+          removed.sprite!.setX(this.sprite?.body.x);
+          removed.sprite!.setY(this.sprite?.body.y);
           removed.player = undefined;
-          this.scene.objects.push(removed);
+          removed.isDropped = true;
+          this.scene.addObject(removed);
         }
       });
     }
@@ -451,5 +451,24 @@ export default class Player implements ISpriteContainer {
   public addKey(key: Key): void {
     this.keys[key.type].push(key);
     key.setCarrier(this);
+  }
+
+  /**
+   * Return the properties that would be used to re-initialize the player as-is
+   */
+  public getProps(): PlayerProps {
+    const props: PlayerProps = {
+      scene: this.scene,
+      x: this.x,
+      y: this.y,
+      weapons: this.weapons,
+      equippedWeapon: this.equippedWeapon,
+      health: this.health,
+    };
+    return props;
+  }
+
+  setScene(scene: ILevel): void {
+    this.scene = scene;
   }
 }

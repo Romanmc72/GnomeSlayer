@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import Player from '../characters/player';
-import { Level, ProjectileOnlyWeapon } from '../types';
+import { ILevel } from '../types';
 import { DEFAULT_DEPTH, WEAPON_ICON_DIMENSIONS } from '../constants';
 import SmallBullet, { SmallBulletProps } from './smallBullet';
 import Clip from './clip';
+import { IProjectileOnlyWeapon } from '../generics';
 
 /**
  * The properties required to instantiate a pistol
@@ -12,7 +13,7 @@ export interface PistolProps {
   /**
    * The scene that the pistol will exist in
    */
-  scene: Level;
+  scene: ILevel;
   /**
    * The player that the pistol belongs to
    */
@@ -39,10 +40,10 @@ export interface PistolProps {
  * The Pistol weapon, a variant of projectile only weapons. It fires the
  * {@link SmallBullet}
  */
-export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
+export default class Pistol implements IProjectileOnlyWeapon<SmallBullet> {
   public projectile: SmallBullet;
 
-  public scene: Level;
+  public scene: ILevel;
 
   public player?: Player;
 
@@ -306,6 +307,10 @@ export default class Pistol implements ProjectileOnlyWeapon<SmallBullet> {
     this.currentClip.ammo.forEach((bullet) => {
       bullet.createColliders();
     });
+  }
+
+  setScene(scene: ILevel): void {
+    this.scene = scene;
   }
 
   public update(): void {

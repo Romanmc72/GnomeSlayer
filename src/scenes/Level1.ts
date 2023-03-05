@@ -1,41 +1,62 @@
-import Phaser from 'phaser';
-import Player from '../characters/player';
 import SmolGnome from '../characters/smolGnome';
 import Pistol from '../weapons/pistol';
-import { Level, SpriteContainer } from '../types';
 import RedDoor from '../objects/redDoor';
 import { LEVEL_2_NAME } from './Level2';
 import SmallKey from '../objects/smallKey';
 import SmallLock from '../objects/smallLock';
 import Health from '../powerups/health';
+import { Level } from '../generics';
 
 export const LEVEL_1_NAME = 'No Way Gnome';
 
-export default class Level1 extends Phaser.Scene implements Level {
-  public player: Player;
-
-  public gnomes: SmolGnome[];
-
-  public ground?: Phaser.Physics.Arcade.StaticGroup;
-
-  public objects: SpriteContainer[] = [];
-
-  private gameWidth = 1000;
-
-  private gameHeight = 500;
-
-  private groundName = 'ground';
-
-  private wallName = 'wall';
-
-  private gnomeCount = 1;
-
-  private controlsName = 'controls';
+export default class Level1 extends Level {
+  private gnomeCount = 3;
 
   constructor() {
-    super(LEVEL_1_NAME);
-    this.player = new Player({ scene: this, x: 40, y: 0 });
-    this.objects.push(new Pistol({
+    const width = 1000;
+    const height = 500;
+    super({
+      levelName: LEVEL_1_NAME,
+      gameWidth: width,
+      gameHeight: height,
+      groundConfig: {
+        ground: {
+          imageFile: 'dirt',
+          x: 0,
+          y: height,
+          spanHorizontal: true,
+          imageHeight: 50,
+          imageWidth: 800,
+        },
+        leftWall: {
+          imageFile: 'wall',
+          x: 0,
+          y: 0,
+          spanVertical: true,
+          imageHeight: 500,
+          imageWidth: 100,
+        },
+        rightWall: {
+          imageFile: 'wall',
+          x: width,
+          y: 0,
+          spanVertical: true,
+          imageHeight: 500,
+          imageWidth: 100,
+
+        },
+      },
+      backgroundConfig: {
+        controls: {
+          imageFile: 'controls',
+          x: 400,
+          y: 150,
+        },
+      },
+      playerX: 100,
+      playerY: 0,
+    });
+    this.addObject(new Pistol({
       scene: this,
       currentClip: 10,
       ammo: 100,
@@ -45,20 +66,28 @@ export default class Level1 extends Phaser.Scene implements Level {
     const door = new RedDoor({
       scene: this,
       nextSceneName: LEVEL_2_NAME,
-      x: this.gameWidth - 400,
-      y: this.gameHeight - 100,
+      x: this.getWidth() - 400,
+      y: this.getHeight() - 100,
     });
     const lock = new SmallLock({ lockedObject: door });
-    this.objects.push(door);
-    this.objects.push(lock);
-    this.gnomes = [];
+    this.addObject(door);
+    this.addObject(lock);
     for (let gnomeCount = 0; gnomeCount < this.gnomeCount; gnomeCount += 1) {
-      this.gnomes.push(new SmolGnome(this, 200 + (10 * gnomeCount), 0, gnomeCount));
+      this.gnomes.push(new SmolGnome({
+        scene: this,
+        x: 200 + (10 * gnomeCount),
+        y: 0,
+      }));
     }
-    this.objects.push(new SmallKey({ scene: this, carrier: this.gnomes[0] }));
-    this.objects.push(new Health({
+    this.addObject(new SmallKey({
       scene: this,
       carrier: this.gnomes[0],
+      x: 0,
+      y: 0,
+    }));
+    this.addObject(new Health({
+      scene: this,
+      carrier: this.gnomes[2],
       healthAmount: 30,
       spinningFrames: 5,
       yoyo: true,
@@ -68,46 +97,6 @@ export default class Level1 extends Phaser.Scene implements Level {
       spritesheet: 'heart',
       x: 0,
       y: 0,
-   }));
-  }
-
-  preload() {
-    this.player.preload();
-    this.gnomes.forEach((gnome) => gnome.preload());
-    this.objects.forEach((object) => object.preload());
-    this.load.image(this.groundName, 'assets/dirt.png');
-    this.load.image(this.controlsName, `assets/${this.controlsName}.png`);
-    this.load.image(this.wallName, `assets/${this.wallName}.png`);
-  }
-
-  create() {
-    this.physics.world.setBounds(0, 0, this.gameWidth, this.gameHeight);
-    this.physics.add.staticImage(400, 150, this.controlsName);
-    this.ground = this.physics.add.staticGroup();
-    const groundWidth = 800;
-    const groundStart = -400;
-    for (
-      let chunk = 0;
-      (((chunk - 1) * groundWidth) + groundStart) < this.gameWidth;
-      chunk += 1
-    ) {
-      this.ground.create(-400 + (chunk * groundWidth), 475, this.groundName);
-    }
-    this.ground.create(-30, 250, this.wallName);
-    this.ground.create(this.gameWidth - 30, 250, this.wallName);
-    this.player.create();
-    this.cameras.main.setBounds(0, 0, this.gameWidth, this.gameHeight);
-    this.cameras.main.startFollow(this.player.sprite!, false, 0.02, 0.25);
-    this.gnomes.forEach((gnome) => gnome.create());
-    this.objects.forEach((object) => object.create());
-    this.player.createColliders();
-    this.gnomes.forEach((gnome) => gnome.createColliders());
-    this.objects.forEach((object) => object.createColliders());
-  }
-
-  update() {
-    this.player.update();
-    this.gnomes.forEach((gnome) => gnome.update());
-    this.objects.forEach((object) => object.update());
+    }));
   }
 }

@@ -1,5 +1,4 @@
-import Lock from './lock';
-import Door from './door';
+import { Door, Lock } from '../generics';
 import { KeyType } from '../types';
 
 export interface SmallLockProps {

@@ -1,10 +1,10 @@
 import { KeyType } from './key';
-import { SpriteContainer } from './spriteContainer';
+import { ISpriteContainer } from './spriteContainer';
 
 /**
  * The interface for properties of a lock
  */
-export interface ILock<T extends KeyType> extends SpriteContainer {
+export interface ILock<T extends KeyType> extends ISpriteContainer {
   /**
    * The Key type that fits this lock
    */
@@ -28,4 +28,9 @@ export interface ILock<T extends KeyType> extends SpriteContainer {
    * @returns - Whether or not the player in the scene has the keys to unlock
    */
   canUnlock: () => boolean;
+  /**
+   * A getter method for the private transition time attribute
+   * @returns The time it takes for the lock to unlock/re-lock
+   */
+  getTransitionTime: () => number;
 }
