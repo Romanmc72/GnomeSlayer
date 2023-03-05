@@ -144,6 +144,7 @@ export default class Player implements ISpriteContainer {
     this.x = props.x;
     this.y = props.y;
     const fist = new Fist({ scene: this.scene, player: this });
+    props.weapons?.forEach((weapon) => weapon.setScene(this.scene));
     props.weapons?.push(fist);
     this.weapons = props.weapons ?? [fist];
     this.equippedWeapon = props.equippedWeapon ?? this.weapons[0];
@@ -461,8 +462,6 @@ export default class Player implements ISpriteContainer {
       scene: this.scene,
       x: this.x,
       y: this.y,
-      weapons: this.weapons,
-      equippedWeapon: this.equippedWeapon,
       health: this.health,
     };
     return props;

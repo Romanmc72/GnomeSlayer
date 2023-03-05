@@ -311,6 +311,7 @@ export default class Pistol implements IProjectileOnlyWeapon<SmallBullet> {
 
   setScene(scene: ILevel): void {
     this.scene = scene;
+    this.ammo.forEach((bullet) => bullet.setScene(scene));
   }
 
   public update(): void {

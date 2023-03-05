@@ -1,4 +1,4 @@
-import { IProjectile } from '../../types';
+import { IProjectile } from '../projectile';
 import { IWeapon } from './weaponBase';
 import Clip from '../../weapons/clip';
 

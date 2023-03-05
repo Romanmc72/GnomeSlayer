@@ -1,7 +1,5 @@
-import {
-  Enemy,
-  Weapon,
-} from '../types';
+import { Enemy } from '../types';
+import { IWeapon } from './weapon';
 import { ISpriteContainer, PartialSpriteContainerProps, SpriteContainer } from './spriteContainer';
 import { DEFAULT_DEPTH } from '../constants';
 import Player from '../characters/player';
@@ -21,7 +19,7 @@ export interface IProjectile extends ISpriteContainer {
   /**
    * The weapon from which this projectile is launched
    */
-  weapon: Weapon;
+  weapon: IWeapon;
   /**
    * The function to call when the projectile hits an object
    * @param object - The object the projectile has hit
@@ -59,7 +57,7 @@ export interface ProjectileProps extends Omit<PartialSpriteContainerProps, 'x' |
   /**
    * The weapon that launches this projectile
    */
-  weapon: Weapon;
+  weapon: IWeapon;
   /**
    * The number of frames involved in the animation of the projectile is launched
    */
@@ -69,7 +67,7 @@ export interface ProjectileProps extends Omit<PartialSpriteContainerProps, 'x' |
 export class Projectile extends SpriteContainer implements IProjectile {
   public damage: number;
 
-  public weapon: Weapon;
+  public weapon: IWeapon;
 
   public isMoving = false;
 
